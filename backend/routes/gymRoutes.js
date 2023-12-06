@@ -6,12 +6,7 @@ const { getGyms,
         deleteGym 
 } = require('../controllers/gymController');
 
-router.get('/', getGyms);
-
-router.post('/', createGym);
-
-router.put('/:id', updateGym);
-
-router.delete('/:id', deleteGym);
+router.route('/').get(getGyms).post(createGym);
+router.route('/:id').put(updateGym).delete(deleteGym);
 
 module.exports = router;

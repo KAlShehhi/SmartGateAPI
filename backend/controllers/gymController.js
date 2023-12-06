@@ -1,31 +1,35 @@
-
+const asyncHandler = require('express-async-handler');
 // @desc    Get gyms
 // @route   GET /api/gyms
 // @access  Private
-const getGyms = (req, res) => {
+const getGyms = asyncHandler(async (req, res) => {
     res.status(200).json({message : 'Get Gym'})
-}
+});
 
 // @desc    Create gym
 // @route   POST /api/gyms
 // @access  Private
-const createGym = (req, res) => {
+const createGym = asyncHandler (async (req, res) => {
+    if(!req.body.name){
+        res.status(400)
+        throw new Error('Please add a name field');
+    }
     res.status(200).json({message : 'Create Gym'})
-}
+});
 
 // @desc    Update gym
-// @route   PUT /api/gyms/id
+// @route   PUT /api/gyms/:id
 // @access  Private
-const updateGym = (req, res) => {
+const updateGym = asyncHandler (async (req, res) => {
     res.status(200).json({message : `Update Gym ${req.params.id}`})
-}
+});
 
 // @desc    Delete gym
-// @route   DELETE /api/gyms/id
+// @route   DELETE /api/gyms/:id
 // @access  Private
-const deleteGym = (req, res) => {
+const deleteGym = asyncHandler(async (req, res) => {
     res.status(200).json({message : `Delete Gym ${req.params.id}`})
-}
+});
 
 
 module.exports = {
