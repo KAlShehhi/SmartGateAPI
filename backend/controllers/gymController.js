@@ -19,7 +19,7 @@ const createGym = asyncHandler (async (req, res) => {
     const gym = await Gym.create({
         name: req.body.name
     });
-    res.status(200).json(gym)
+    res.status(201).json(gym)
 });
 
 // @desc    Update gym
