@@ -6,7 +6,10 @@ const { getGyms,
         deleteGym 
 } = require('../controllers/gymController');
 
-router.route('/').get(getGyms).post(createGym);
-router.route('/:id').put(updateGym).delete(deleteGym);
+const {protect} = require('../middleware/authMiddleware');
+
+router.route('/').get(protect, getGyms).post(protect,createGym);
+router.route('/:id').put(protect, updateGym).delete(protect, deleteGym);
+
 
 module.exports = router;

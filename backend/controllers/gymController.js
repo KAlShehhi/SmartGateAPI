@@ -1,10 +1,11 @@
 const asyncHandler = require('express-async-handler');
 const Gym = require('../models/gymModel');
+const User = require('../models/userModel');
 // @desc    Get gyms
 // @route   GET /api/gyms
 // @access  Private
 const getGyms = asyncHandler(async (req, res) => {
-    const gyms = await Gym.find();
+    const gyms = await Gym.find({user: req.user.id});
     res.status(200).json(gyms);
 });
 
@@ -17,7 +18,8 @@ const createGym = asyncHandler (async (req, res) => {
         throw new Error('Please add a name field');
     }
     const gym = await Gym.create({
-        name: req.body.name
+        name: req.body.name,
+        user: req.user.id,
     });
     res.status(201).json(gym)
 });
@@ -30,6 +32,17 @@ const updateGym = asyncHandler (async (req, res) => {
     if(!gym){
         res.status(400);
         throw new Error('Gym not found!');
+    }
+    const user = await User.findById(req.user.id);
+    //check auth
+    if(!user){
+        res.status(401)
+        throw new Error('User not found');
+    }
+    //check if user is the one who created the gym
+    if(gym.user.toString() !== user.id){
+        res.status(401)
+        throw new Error('User not authorized');
     }
     const updatedGym = await Gym.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
@@ -45,6 +58,17 @@ const deleteGym = asyncHandler(async (req, res) => {
     if(!gym){
         res.status(400);
         throw new Error('Gym not found!');
+    }
+    const user = await User.findById(req.user.id);
+    //check auth
+    if(!user){
+        res.status(401)
+        throw new Error('User not found');
+    }
+    //check if user is the one who created the gym
+    if(gym.user.toString() !== user.id){
+        res.status(401)
+        throw new Error('User not authorized');
     }
     const deletedGym = await Gym.findByIdAndDelete(req.params.id);
     res.status(200).json({message : `Delete Gym ${req.params.id}`})
