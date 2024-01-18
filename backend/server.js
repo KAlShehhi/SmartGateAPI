@@ -13,6 +13,7 @@ app.use(express.urlencoded({extended:false}));
 
 app.use('/api/gym', require('./routes/gymRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/app/users', require('./routes/userAppRoutes'));
 
 app.use(errorHandler);
 
