@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const classModel = mongoose.Schema({
+const classSchema = mongoose.Schema({
     gymID:{
         type: mongoose.Schema.Types.ObjectId,
         required: true,
@@ -27,3 +27,5 @@ const classModel = mongoose.Schema({
         required: [false]
     }
 });
+
+module.exports = mongoose.model('Class', classSchema);

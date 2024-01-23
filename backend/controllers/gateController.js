@@ -9,7 +9,7 @@ const userEntry = asyncHandler(async(req, res) => {
 });
 
 
-// @desc    authenticate users existing the gym using the gate
+// @desc    un-authenticate users existing the gym using the gate
 // @route   POST /api/gate/exit/:gymID/:userID
 // @access  Private
 const userExist = asyncHandler(async(req, res) => {
@@ -18,4 +18,4 @@ const userExist = asyncHandler(async(req, res) => {
 
 
 
-module.exports = {}
+module.exports = {userEntry, userExist}
