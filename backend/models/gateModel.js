@@ -10,7 +10,7 @@ const gateSchema = mongoose.Schema({
         type: String,
         require: true
     },
-    isActrive:{
+    isActive:{
         type: Boolean,
         required: true
     }
