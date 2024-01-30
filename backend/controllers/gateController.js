@@ -1,4 +1,8 @@
 const asyncHandler = require('express-async-handler');
+const Gym = require('../models/gymModel');
+const User = require('../models/userModel');
+const Entry = require('../models/gymEntryByUserModel');
+const Exit = require('../models/gymExitByUserModel');
 
 // @desc    check if the server is online or not
 // @route   GET /api/gate/check
@@ -14,7 +18,21 @@ const checkServer = asyncHandler(async (req, res) => {
 // @route   POST /api/gate/entry/:gymID/:userID
 // @access  Private
 const userEntry = asyncHandler(async(req, res) => {
-    
+    const gymID = req.body.gymID
+    const userID = req.body.userID;
+    const user = await User.findById({userID});
+    const gym = await Gym.findById({gymID});
+    if(!user){
+        res.status(400).json({
+            msg: 'User does not exist'
+        });
+    }
+    if(!gym){
+        res.status(400).json({
+            msg: 'Gym does not exist'
+        });
+    }
+    //TODO: auth user into gym
 });
 
 
@@ -22,7 +40,21 @@ const userEntry = asyncHandler(async(req, res) => {
 // @route   POST /api/gate/exit/:gymID/:userID
 // @access  Private
 const userExit = asyncHandler(async(req, res) => {
-    
+    const gymID = req.body.gymID
+    const userID = req.body.userID;
+    const user = await User.findById({userID});
+    const gym = await Gym.findById({gymID});
+    if(!user){
+        res.status(400).json({
+            msg: 'User does not exist'
+        });
+    }
+    if(!gym){
+        res.status(400).json({
+            msg: 'Gym does not exist'
+        });
+    }
+    //TODO: auth user out of gym
 });
 
 
