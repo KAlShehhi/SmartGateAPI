@@ -33,6 +33,7 @@ const userEntry = asyncHandler(async(req, res) => {
         });
     }
     //TODO: auth user into gym
+    
 });
 
 

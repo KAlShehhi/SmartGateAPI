@@ -45,8 +45,8 @@ const createSub = asyncHandler(async (req, res) =>{
 
 
 
-// @desc    get all subscriptions that the gym offers
-// @route   GET /api/subscription/getSubs/:id
+// @desc    get all subscriptions that a specific gym offers
+// @route   GET /api/subscription/getSubs/:gymId
 // @access  public
 const getSubs = asyncHandler(async(req, res) => {
     const gymID = req.params.id;
@@ -58,8 +58,45 @@ const getSubs = asyncHandler(async(req, res) => {
     }else{
         res.status(400).json({
             msg: 'Gym does not have any subscription options'
-        })
+        });
     }
 });
 
-module.exports = {createSub, getSubs}
+// @desc    update a subscription
+// @route   PUT /api/subscription/:subid
+// @access  private
+const updateSub = asyncHandler(async(req, res) =>{
+    const subid = req.params.id
+    const userID = req.user.id
+    const sub = await Subscription.findById({subid});
+    const user = await User.findById({userID});
+    if(sub){
+        const gymID = sub.gymID;
+        const subID = sub.id;
+        if(user){
+            if(user.gymID === gymID){
+                const updatedSub = await Subscription.findByIdAndUpdate({
+                    subID,
+                    gymID,
+                    subName: req.body.subName,
+                    subType: req.body.subType,
+                })
+            }else{
+                res.status(400).json({
+                   msg: 'User is not authorized'
+                })
+            }
+        }else{
+            res.status(400).json({
+                msg: 'User not found'
+            })
+        }
+    }else{
+        res.status(400).json({
+            msg: 'Subscription not found'
+        });
+    }
+});
+
+
+module.exports = {createSub, getSubs, updateSub}
