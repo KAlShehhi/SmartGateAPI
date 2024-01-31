@@ -10,8 +10,8 @@ const Subscription = require('../models/subscriptionModel');
 const createSub = asyncHandler(async (req, res) =>{
     const userID = req.params.id
     const {subName, subType} = req.body;
-    const user = User.findById({userID});
-    if(!user){
+    const user = await User.findById({userID});
+    if(!user){ 
         res.status(400).json({
             msg: 'User does not exists'
         })
@@ -45,4 +45,21 @@ const createSub = asyncHandler(async (req, res) =>{
 
 
 
-module.exports = {createSub}
+// @desc    get all subscriptions that the gym offers
+// @route   GET /api/subscription/getSubs/:id
+// @access  public
+const getSubs = asyncHandler(async(req, res) => {
+    const gymID = req.params.id;
+    const subs = await Subscription.find({gymID: gymID});
+    if(subs){
+        res.status(200).json({
+            subs
+        });
+    }else{
+        res.status(400).json({
+            msg: 'Gym does not have any subscription options'
+        })
+    }
+});
+
+module.exports = {createSub, getSubs}

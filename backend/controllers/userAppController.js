@@ -117,8 +117,6 @@ const generateToken = (id) => {
 }
 
 
-
-
 module.exports = {
     checkPassword,
     loginUser,
