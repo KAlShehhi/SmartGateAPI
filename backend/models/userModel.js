@@ -1,9 +1,36 @@
 const mongoose = require('mongoose');
 
 const UserSchema = mongoose.Schema({
-    name: {
+    firstName: {
         type : String,
-        required: [true, 'Please add a name']
+        required: [true, 'Please add a first name']
+    },
+    lastName: {
+        type : String,
+        required: [true, 'Please add a last name']
+    },
+    DateOfBirth:{
+        type: Date,
+        required: [true, 'Please add a date of birth'],
+        trim: true
+    },
+    isAdmin:{
+        type: Boolean,
+        required: false
+    },
+    isGymOwner:{
+        type: Boolean,
+        required: false
+    },
+    gymID:{
+        type: mongoose.Schema.Types.ObjectId,
+        required: false,
+        ref: 'Gym'
+    },
+    lastEntry:{
+        type: mongoose.Schema.Types.ObjectId,
+        required: false,
+        ref: 'UserEntry'
     },
     email: {
         type : String,
