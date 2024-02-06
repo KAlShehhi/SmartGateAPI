@@ -56,10 +56,15 @@ const loginUser = asyncHandler(async(req, res) => {
         }else{
             if(userExist && isAuthed){
                 res.status(201).json({
-                    _id: userExist.id,
-                    name: userExist.name,
-                    email : userExist.email,
-                    token: generateToken(userExist._id)
+                    _id: user.id,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    email : user.email,
+                    phoneNumber: user.phoneNumber,
+                    isMale: user.isMale,
+                    DateOfBirth: user.DateOfBirth,
+                    emirate: user.emirate,
+                    token: generateToken(user._id)
                 })
             }else{
                 res.status(400);
@@ -74,8 +79,8 @@ const loginUser = asyncHandler(async(req, res) => {
 // @route   POST /api/app/users
 // @access  Public
 const registerUser =  asyncHandler(async(req, res) => {
-    const {name, email, password} = req.body;
-    if(!name || !email || !password){
+    const {firstName, lastName, email, phoneNumber, isMale, day, month, year, password, emirate} = req.body;
+    if(!firstName || !lastName || !email || !phoneNumber || !day || !month || !year|| !emirate){
         res.status(400);
         throw new Error('Please add all fields');
     }
@@ -88,17 +93,27 @@ const registerUser =  asyncHandler(async(req, res) => {
 
     //Create user
     const user = await User.create({
-        name,
+        fistName,
+        lastName,
         email,
-        password
+        phoneNumber,
+        isMale,
+        DateOfBirth: new Date(year, month - 1, day),
+        password,
+        emirate
     });
 
     if(user){
         console.log(`User created (${user.id}) at ${new Date(8.64e15).toString()}`);
         res.status(201).json({
             _id: user.id,
-            name: user.name,
+            firstName: user.firstName,
+            lastName: user.lastName,
             email : user.email,
+            phoneNumber: user.phoneNumber,
+            isMale: user.isMale,
+            DateOfBirth: user.DateOfBirth,
+            emirate: user.emirate,
             token: generateToken(user._id)
         });
     }else{

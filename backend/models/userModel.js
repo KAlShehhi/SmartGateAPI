@@ -14,6 +14,10 @@ const UserSchema = mongoose.Schema({
         required: [true, 'Please add a date of birth'],
         trim: true
     },
+    isMale:{
+        type: Boolean,
+        required: [true, 'Please add a gender'],
+    },
     isAdmin:{
         type: Boolean,
         required: false
