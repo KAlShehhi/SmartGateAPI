@@ -7,6 +7,7 @@ const User = require('../models/userModel');
 // @access  Private
 const validateExistingToken = asyncHandler(async(req, res) => {
     const token = req.body;
+    console.log(token);
     //Check token
     jwt.verify(token, process.env.JWT_SECRET, function(err, decoded){
         if(err){
@@ -23,15 +24,16 @@ const validateExistingToken = asyncHandler(async(req, res) => {
 
 
 // @desc    Sends the hashed password to the app to compare
-// @route   POST /api/app/users/check
+// @route   POST /api/app/users/checkPassword
 // @access  Public
 const checkPassword = asyncHandler(async(req, res) => {
     const {email} = req.body;
+    console.log(email);
     //Check for user email
     const userExist = await User.findOne({email})
     if(userExist){
         res.status(201).json({
-            token: generateToken(email),
+            token: generateAuthToken(email),
             password: userExist.password
         });
     }else{
@@ -46,6 +48,7 @@ const checkPassword = asyncHandler(async(req, res) => {
 // @access  Public
 const loginUser = asyncHandler(async(req, res) => {
     const {email, token, isAuthed} = req.body;
+    console.log(req.body);
     //Check for user email
     const userExist = await User.findOne({email})
     console.log(token);
@@ -56,15 +59,15 @@ const loginUser = asyncHandler(async(req, res) => {
         }else{
             if(userExist && isAuthed){
                 res.status(201).json({
-                    _id: user.id,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    email : user.email,
-                    phoneNumber: user.phoneNumber,
-                    isMale: user.isMale,
-                    DateOfBirth: user.DateOfBirth,
-                    emirate: user.emirate,
-                    token: generateToken(user._id)
+                    userID : userExist._id,
+                    firstName: userExist.firstName,
+                    lastName: userExist.lastName,
+                    email : userExist.email,
+                    phoneNumber: userExist.phoneNumber,
+                    isMale: userExist.isMale,
+                    DateOfBirth: userExist.DateOfBirth,
+                    emirate: userExist.emirate,
+                    token: generateToken(userExist._id)
                 })
             }else{
                 res.status(400);
@@ -76,7 +79,7 @@ const loginUser = asyncHandler(async(req, res) => {
 
 
 // @desc    Register a user 
-// @route   POST /api/app/users
+// @route   POST /api/app/registerUser
 // @access  Public
 const registerUser =  asyncHandler(async(req, res) => {
     const {firstName, lastName, email, phoneNumber, isMale, day, month, year, password, emirate} = req.body;
@@ -93,7 +96,7 @@ const registerUser =  asyncHandler(async(req, res) => {
 
     //Create user
     const user = await User.create({
-        fistName,
+        firstName,
         lastName,
         email,
         phoneNumber,
@@ -106,7 +109,7 @@ const registerUser =  asyncHandler(async(req, res) => {
     if(user){
         console.log(`User created (${user.id}) at ${new Date(8.64e15).toString()}`);
         res.status(201).json({
-            _id: user.id,
+            userID: user._id,
             firstName: user.firstName,
             lastName: user.lastName,
             email : user.email,
@@ -125,6 +128,14 @@ const registerUser =  asyncHandler(async(req, res) => {
 
 //Generate JWT token for user login
 const generateToken = (id) => {
+    return jwt.sign({id}, process.env.JWT_SECRET, {
+        expiresIn: '30d',
+    })
+}
+
+
+//Generate JWT token for user login
+const generateAuthToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {
         expiresIn: '30d',
     })

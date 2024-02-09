@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {createSub, getSubs} = require('../controllers/userAppController')
+const {createSub, getSubs} = require('../controllers/subscriptionController')
 const { protect } = require('../middleware/authMiddleware');
 
 

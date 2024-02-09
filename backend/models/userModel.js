@@ -9,6 +9,14 @@ const UserSchema = mongoose.Schema({
         type : String,
         required: [true, 'Please add a last name']
     },
+    email: {
+        type : String,
+        required: [true, 'Please add a email']
+    },
+    phoneNumber: {
+        type : String,
+        required: [true, 'Please add a phone number']
+    },
     DateOfBirth:{
         type: Date,
         required: [true, 'Please add a date of birth'],
@@ -17,6 +25,10 @@ const UserSchema = mongoose.Schema({
     isMale:{
         type: Boolean,
         required: [true, 'Please add a gender'],
+    },
+    emirate: {
+        type : String,
+        required: [true, 'Please add an emirate']
     },
     isAdmin:{
         type: Boolean,
