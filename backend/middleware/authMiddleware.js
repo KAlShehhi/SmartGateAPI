@@ -56,4 +56,4 @@ const gymOwner = asyncHandler(async(req, res, next) =>{
 })
 
 
-module.exports = { protect }
+module.exports = { protect, gymOwner}
