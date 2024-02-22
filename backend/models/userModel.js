@@ -56,7 +56,13 @@ const UserSchema = mongoose.Schema({
     password: {
         type : String,
         required: [true, 'Please add a password']
-    },    
+    },
+    //0=not applied, 1=applied but not yet approved, 2=applied and rejected, 3=approved
+    applytoGymStatus:{
+        type: String,
+        required: false,
+        default: "0"
+    }  
 },{
     timestamps: true
 });

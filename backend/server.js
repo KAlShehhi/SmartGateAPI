@@ -16,7 +16,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/gate', require('./routes/gateRoutes'));
 app.use('/api/subscription', require('./routes/subscriptionRoutes'));
 app.use('/api/app/users', require('./routes/userAppRoutes'));
-
+app.use('/api/admin/', require('./routes/adminRoutes'));
 app.use(errorHandler);
 
 app.listen(port, () => console.log(`Server started on port ${port}`));

@@ -1,21 +1,26 @@
 const asyncHandler = require('express-async-handler');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
+const UserRequestGymOwner = require('../models/userRequestGymOwnerModel');
 
 // @desc    Gets the existing token from the user and validated it
 // @route   POST /api/app/users/validate
 // @access  Private
 const validateExistingToken = asyncHandler(async(req, res) => {
-    const token = req.body;
-    console.log(token);
+    const {token} = req.body;
+    if(!token){
+        res.status(400);
+        throw new Error('No token');
+    }
     //Check token
-    jwt.verify(token, process.env.JWT_SECRET, function(err, decoded){
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if(err){
             res.status(400);
             throw new Error('Invalid token');
         }else{
-            res.status(201).json({
-                isAuthed: true
+            console.log(`Token verified`.green);
+            res.status(200).json({
+                Authed: true
             });
         }
     });
@@ -82,6 +87,7 @@ const loginUser = asyncHandler(async(req, res) => {
 // @route   POST /api/app/registerUser
 // @access  Public
 const registerUser =  asyncHandler(async(req, res) => {
+    console.log(req.body);
     const {firstName, lastName, email, phoneNumber, isMale, day, month, year, password, emirate} = req.body;
     if(!firstName || !lastName || !email || !phoneNumber || !day || !month || !year|| !emirate){
         res.status(400);
@@ -90,7 +96,7 @@ const registerUser =  asyncHandler(async(req, res) => {
     //Check if user exist
     const userExist = await User.findOne({email})
     if(userExist){
-        res.status(400)
+        res.status(409)
         throw new Error('User already exist')
     }
 
@@ -103,7 +109,10 @@ const registerUser =  asyncHandler(async(req, res) => {
         isMale,
         DateOfBirth: new Date(year, month - 1, day),
         password,
-        emirate
+        emirate,
+        isGymOwner: false,
+        isAdmin: false,
+        applytoGymStatus:"0"
     });
 
     if(user){
@@ -117,11 +126,166 @@ const registerUser =  asyncHandler(async(req, res) => {
             isMale: user.isMale,
             DateOfBirth: user.DateOfBirth,
             emirate: user.emirate,
-            token: generateToken(user._id)
+            token: generateToken(user._id),
         });
     }else{
         res.status(400);
         throw new Error('Invalid user data')
+    }
+});
+
+// @desc    A User can request to change his role to a gym owner
+// @route   POST /api/app/applyGymOwner
+// @access  Public
+const applyToBeAGymOwner = asyncHandler(async (req, res) => {
+    const { userID } = req.body;
+    console.log(req.body);
+    
+    if (!userID) {
+        return res.status(400).json({
+            msg: 'No user id'
+        });
+    }
+
+    try {
+        const user = await User.findById(userID);
+        
+        if (!user) {
+            return res.status(400).json({
+                msg: 'User not found'
+            });
+        }
+
+        const newUser = await User.findOneAndUpdate(
+            { _id: userID },
+            { applytoGymStatus: 1 },
+            { new: true }
+        );
+
+        const userRequest = await UserRequestGymOwner.create({
+            userID: newUser._id,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            email: newUser.email
+        });
+
+        return res.status(200).json({
+            msg: 'done'
+        });
+    } catch (err) {
+        // Handle any unexpected errors
+        console.error(err);
+        return res.status(500).json({
+            msg: 'Internal server error'
+        });
+    }
+});
+
+
+// @desc    Check if the user is a gym owner
+// @route   POST /api/app/checkGymOwner
+// @access  Public
+const isGymOwnerCheck = asyncHandler(async(req, res) => {
+    const { userID } = req.body;
+    if (!userID) {
+        return res.status(400).json({
+            msg: 'No user id'
+        });
+    }
+
+    try {
+        const user = await User.findById(userID);
+        if (user) {
+            if (user.isGymOwner) {
+                return res.status(200).json({
+                    msg: 'verified'
+                });
+            } else {
+                return res.status(400).json({
+                    msg: 'user not authorized'
+                });
+            }
+        } else {
+            return res.status(400).json({
+                msg: 'User not found'
+            });
+        }
+    } catch (err) {
+        // Handle any unexpected errors
+        console.error(err);
+        return res.status(500).json({
+            msg: 'Internal server error'
+        });
+    }
+});
+
+
+// @desc    Check if the user is a gym admin
+// @route   POST /api/app/checkAdmin
+// @access  Public
+const isAdminCheck = asyncHandler(async(req, res) => {
+    const { userID } = req.body;
+    if (!userID) {
+        return res.status(400).json({
+            msg: 'No user id'
+        });
+    }
+
+    try {
+        const user = await User.findById(userID);
+        if (user) {
+            if (user.isAdmin) {
+                return res.status(200).json({
+                    msg: 'verified'
+                });
+            } else {
+                return res.status(400).json({
+                    msg: 'user not authorized'
+                });
+            }
+        } else {
+            return res.status(400).json({
+                msg: 'User not found'
+            });
+        }
+    } catch (err) {
+        // Handle any unexpected errors
+        console.error(err);
+        return res.status(500).json({
+            msg: 'Internal server error'
+        });
+    }
+});
+
+// @desc    Get the status code of applying to be a gym owner
+// @route   POST /api/app/getApplyStatus
+// @access  Public
+const getApplyStatus = asyncHandler(async(req, res) => {
+    const { userID } = req.body;
+    console.log("test");
+    if (!userID) {
+        return res.status(400).json({
+            msg: 'No user id'
+        });
+    }
+    try {
+        const user = await User.findById(userID);
+        if (user) {
+            console.log("test");
+            return res.status(200).json({
+                applyStatus: user.applytoGymStatus
+            });
+        } else {
+            return res.status(400).json({
+                msg: 'User not found'
+            });
+        }
+    } catch (err) {
+        // Handle any unexpected errors
+        console.error(err);
+        return res.status(500).json({
+            msg: 'Internal server error'
+        });
     }
 });
 
@@ -146,5 +310,9 @@ module.exports = {
     checkPassword,
     loginUser,
     registerUser,
-    validateExistingToken
+    validateExistingToken,
+    isAdminCheck,
+    isGymOwnerCheck,
+    applyToBeAGymOwner,
+    getApplyStatus
 }
