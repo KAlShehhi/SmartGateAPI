@@ -39,9 +39,9 @@ const UserSchema = mongoose.Schema({
         required: false
     },
     gymID:{
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         required: false,
-        ref: 'Gym'
+        default: "0"
     },
     lastEntry:{
         type: mongoose.Schema.Types.ObjectId,

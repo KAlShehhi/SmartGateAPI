@@ -1,0 +1,7 @@
+User:
+    -Forget password
+    -Login using google/apple
+
+Admin:
+    -Gym owner documations
+    -Once a gym owner is disapproved, he cannot be approved later.

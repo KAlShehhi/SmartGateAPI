@@ -13,9 +13,10 @@ const getGyms = asyncHandler(async (req, res) => {
 // @route   POST /api/gyms
 // @access  Private
 const createGym = asyncHandler (async (req, res) => {
-    if(!req.body.name){
+     const {name, allowedGenders, workingHours, isOpenAllDay, fullCapacity} = req.body;   
+    if(!name || !allowedGenders || !fullCapacity){
         res.status(400)
-        throw new Error('Please add a name field');
+        throw new Error('Please enter all fields');
     }
     const gym = await Gym.create({
         name: req.body.name,

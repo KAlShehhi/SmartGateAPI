@@ -8,7 +8,8 @@ const {
         isAdminCheck,
         isGymOwnerCheck,
         applyToBeAGymOwner,
-        getApplyStatus
+        getApplyStatus,
+        gymCreated
 } = require('../controllers/userAppController')
 const { protect } = require('../middleware/authMiddleware');
 
@@ -19,7 +20,8 @@ router.post('/registerUser', registerUser);
 router.post('/validate', validateExistingToken);
 router.post('/checkGymOwner', isGymOwnerCheck);
 router.post('/checkAdmin', isAdminCheck);
-router.post('/applyGymOwner', applyToBeAGymOwner)
-router.post('/getApplyStatus', getApplyStatus)
+router.post('/applyGymOwner', applyToBeAGymOwner);
+router.post('/getApplyStatus', getApplyStatus);
+router.get('/gymCreated/:id', gymCreated);
 
 module.exports = router;

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const userRequestGymOwnerModel = mongoose.Schema({
+const ApprovedGymOwnerModel = mongoose.Schema({
     userID: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
@@ -20,4 +20,4 @@ const userRequestGymOwnerModel = mongoose.Schema({
     },
 });
 
-module.exports = mongoose.model('UserRequestGymOwner', userRequestGymOwnerModel);
+module.exports = mongoose.model('ApprovedGymOwner', ApprovedGymOwnerModel);
