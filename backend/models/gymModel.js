@@ -10,17 +10,17 @@ const gymSchema = mongoose.Schema({
         type: String,
         required: [true, 'Please add a name']
     },
-    allowedGenders:{
+    phoneNumber:{
         type: String,
+        required: [true, 'Please add a phone number']
+    },
+    allowedGenders:{
+        type: String, //M or F or MI
         required: [true, 'Please specify allowed genders']
     },
     workingHours:{
-        type: String,
+        type: String, //{OPEN TIME}/{CLOSETIME}/{DAYS} EG: 0700AM/1130PM/OOOOOCO if(247 == 24/7)
         required: [true, 'Please specify working hours']
-    },
-    isOpenAllDay:{
-        type: Boolean,
-        required: [true, 'Please specify if the gym is 24/7']
     },
     rating:{
         type: String,
@@ -31,6 +31,14 @@ const gymSchema = mongoose.Schema({
         type: String,
         required: [true, "Please specify the gym's full capacity"]
     },
+    emirate:{
+        type: String,
+        required : [true, "Please add an emirate"]
+    },
+    googleMapsLink:{
+        type: String,
+        required: [true, 'Please add a link']
+    },
     lat:{
         type: String,
         required: [true, "Please specify the gym's location"]
@@ -39,7 +47,60 @@ const gymSchema = mongoose.Schema({
         type: String,
         required: [true, "Please specify the gym's location"]
     },
-
+    swimmingPool:{
+        type: Boolean,
+        required: false,
+        default: false,
+    },
+    crossfit:{
+        type: Boolean,
+        required: false,
+        default: false,
+    },
+    caffe:{
+        type: Boolean,
+        required: false,
+        default: false,
+    },
+    resturant:{
+        type: Boolean,
+        required: false,
+        default: false,
+    },
+    suna:{
+        type: Boolean,
+        required: false,
+        default: false,
+    },
+    icebath:{
+        type: Boolean,
+        required: false,
+        default: false,
+    },
+    lockers:{
+        type: Boolean,
+        required: false,
+        default: false,
+    },
+    changingRooms:{
+        type: Boolean,
+        required: false,
+        default: false,
+    },
+    personalcoaches:{
+        type: Boolean,
+        required: false,
+        default: false,
+    },
+    freecoaches:{
+        type: Boolean,
+        required: false,
+        default: false,
+    },
+    description:{
+        type:String,
+        required: true,
+    }
 }, {
     timestamps: true
 });
