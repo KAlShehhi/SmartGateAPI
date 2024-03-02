@@ -14,9 +14,9 @@ const classSchema = mongoose.Schema({
         type: String,
         required: [true, "Please add a start time to the class"]
     },
-    classDuration: {
+    endTime: {
         type: String,
-        required: [true, 'Please add the clas duration']
+        required: [true, 'Please add a end time to the class']
     },
     days:{
         type: String,

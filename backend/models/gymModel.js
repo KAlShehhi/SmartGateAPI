@@ -57,17 +57,17 @@ const gymSchema = mongoose.Schema({
         required: false,
         default: false,
     },
-    caffe:{
+    cafe:{
         type: Boolean,
         required: false,
         default: false,
     },
-    resturant:{
+    restaurant:{
         type: Boolean,
         required: false,
         default: false,
     },
-    suna:{
+    sauna:{
         type: Boolean,
         required: false,
         default: false,
@@ -87,12 +87,12 @@ const gymSchema = mongoose.Schema({
         required: false,
         default: false,
     },
-    personalcoaches:{
+    coaches:{
         type: Boolean,
         required: false,
         default: false,
     },
-    freecoaches:{
+    freeCoaches:{
         type: Boolean,
         required: false,
         default: false,

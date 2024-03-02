@@ -9,11 +9,12 @@ const {
         isGymOwnerCheck,
         applyToBeAGymOwner,
         getApplyStatus,
-        gymCreated
+        gymCreated,
+        getUserGymID
 } = require('../controllers/userAppController')
-const { protect } = require('../middleware/authMiddleware');
+const { auth } = require('../middleware/authMiddleware');
 
-
+router.route('/getUserGymID').post(auth, getUserGymID);
 router.post('/login', loginUser);
 router.post('/checkPassword', checkPassword);
 router.post('/registerUser', registerUser);

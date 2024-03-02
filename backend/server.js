@@ -12,6 +12,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended:false}));
 
 app.use('/api/gym', require('./routes/gymRoutes'));
+app.use('/api/class', require('./routes/classRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/gate', require('./routes/gateRoutes'));
 app.use('/api/subscription', require('./routes/subscriptionRoutes'));

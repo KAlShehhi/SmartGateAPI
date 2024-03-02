@@ -324,6 +324,36 @@ const gymCreated = asyncHandler(async(req, res) => {
         });
     }
 });
+
+
+// @desc    Get the status code of applying to be a gym owner
+// @route   POST /api/app/users/getUserGymID
+// @access  Private
+const getUserGymID = asyncHandler(async(req, res) => {
+    const {userID} = req.body;
+    try{
+        const user = await User.findById(userID);
+        if(!user){
+            return res.status(400).json({
+                msg: 'No User found'
+            });
+        }
+        if(!user.isGymOwner){
+            return res.status(400).json({
+                msg: 'user not authorized'
+            });
+        }
+        return res.status(200).json({
+            gymID: user.gymID
+        });
+    }catch{
+        console.error(err);
+        return res.status(500).json({
+            msg: 'Internal server error'
+        });
+    }
+});
+
 //Generate JWT token for user login
 const generateToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {
@@ -349,5 +379,6 @@ module.exports = {
     isGymOwnerCheck,
     applyToBeAGymOwner,
     getApplyStatus,
-    gymCreated
+    gymCreated,
+    getUserGymID
 }
