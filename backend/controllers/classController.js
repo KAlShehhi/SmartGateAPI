@@ -49,7 +49,7 @@ const createClass = asyncHandler(async (req, res) => {
 // @route   GET /api/class/getGymClasses/:id
 // @access  Public
 const getGymClasses = asyncHandler(async (req, res) => {
-    const { gymID } = req.params.id;
+    const gymID = req.params.id;
     try{
         const gym = await Gym.findById(gymID);
         if(!gym){
@@ -57,8 +57,28 @@ const getGymClasses = asyncHandler(async (req, res) => {
                 msg: 'Gym does not exist'
             })
         }
-        const classes = await Class.find({gymID});
+        const classes = await Class.find({gymID: gymID});
         res.status(200).json(classes);
+    }catch{
+        return res.status(400).json({
+            msg: 'Server error:  getting classes'
+        })
+    }
+});
+
+// @desc    gets a specific classes for a spesifc gym
+// @route   GET /api/class/getClass/:id
+// @access  Public
+const getClass = asyncHandler(async (req, res) => {
+    const classID = req.params.id;
+    try{
+        const currentClass = await Class.findById(classID);
+        if(!currentClass){
+            return res.status(400).json({
+                msg: 'Class does not exist'
+            })
+        }
+        res.status(200).json(currentClass);
     }catch{
         return res.status(400).json({
             msg: 'Server error:  getting classes'
@@ -71,6 +91,11 @@ const getGymClasses = asyncHandler(async (req, res) => {
 // @access  Private
 const deleteClass = asyncHandler(async (req, res) => {
     const {gymID, classID, userID } = req.body;
+    if(!classID || !gymID){
+        return res.status(400).json({
+            msg: 'Invalid input'
+        }); 
+    }
     try{
         const user = await User.findById(userID);
         if(!user){
@@ -83,22 +108,21 @@ const deleteClass = asyncHandler(async (req, res) => {
                 msg: 'User unauthorized'
             });
         }
-        if(!user.gymID != gymID){
-            return res.status(400).json({
-                msg: 'User unauthorized'
+
+        if (user.gymID.toString() !== gymID) {
+            return res.status(401).json({
+                msg: "Not authorized"
             });
         }
-        await Class.findByIdAndDelete(classID, function(err, decs){
-            if(err){
-                return res.status(400).json({
-                    msg: 'Server error:  deleting class'
-                })
-            }else{
-                return res.status(200).json({
-                    msg: 'Class deleted'
-                })
-            }
-        })
+        const deletedClass = await Class.findByIdAndDelete(classID);
+        if (!deletedClass) {
+            return res.status(404).json({
+                msg: 'Class not found'
+            });
+        }
+        return res.status(200).json({
+            msg: 'Class deleted'
+        });
     }catch{
         return res.status(400).json({
             msg: 'Server error:  deleting class'
@@ -106,38 +130,47 @@ const deleteClass = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    deletes class
+// @desc    update class
 // @route   PUT /api/class/updateClass/
 // @access  Private
 const updateClass = asyncHandler(async (req, res) => {
-    const {name, startTime, endTime, days, trainerName, gymID, classID} = req.body;
-    if(!name || !startTime || endTime || !days || !trainerName){
+    const { name, startTime, endTime, days, trainerName, gymID, classID, userID } = req.body;
+    if (!name || !startTime || !endTime || !days || !trainerName || !classID) {
         return res.status(400).json({
-            msg: 'invalid input'
+            msg: 'Invalid input'
         });
     }
-    try{
+    try {
         const gym = await Gym.findById(gymID);
-        if(!gym){
+        if (!gym) {
             return res.status(400).json({
                 msg: 'Gym does not exist'
             });
         }
-        await Class.findOneAndUpdate({_id: classID}, {
-            gymID,
+        const user = await User.findById(userID);
+        if (!user || (user.gymID.toString() !== gymID)) {
+            return res.status(401).json({
+                msg: "Not authorized"
+            });
+        }
+        const updatedClass = await Class.findByIdAndUpdate(classID, {
             name,
             startTime,
             endTime,
             days,
             trainerName
-        }, {new: true});
-        return res.status(400).json({
-            msg: 'error updating class'
-        })
-    }catch{
-        return res.status(400).json({
-            msg: 'Server error:  updating class'
-        })
+        }, { new: true });
+        if (!updatedClass) {
+            return res.status(404).json({
+                msg: 'Class not found'
+            });
+        }
+        return res.status(200).json(updatedClass);
+    } catch (error) {
+        console.error(error); 
+        return res.status(500).json({
+            msg: 'Server error: updating class'
+        });
     }
 });
 
@@ -145,4 +178,4 @@ const updateClass = asyncHandler(async (req, res) => {
 
 
 
-module.exports = {createClass, getGymClasses, deleteClass, updateClass}
+module.exports = {createClass, getGymClasses, deleteClass, updateClass, getClass}
