@@ -8,6 +8,7 @@ const Exit = require('../models/gymExitByUserModel');
 // @route   GET /api/gate/check
 // @access  Public
 const checkServer = asyncHandler(async (req, res) => {
+    console.log("123");
     res.status(201).json({
         isOnline: true
     })
