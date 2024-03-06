@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const {createSub, getSubs} = require('../controllers/subscriptionController')
-const { protect } = require('../middleware/authMiddleware');
+const {createSub, getSubs, getSub, updateSub, deleteSub} = require('../controllers/subscriptionController')
+const { auth } = require('../middleware/authMiddleware');
 
 
+router.route('/get/').get(getSub);
+router.route('/getSub/:id').get(getSubs);
+router.route('/create/').post(auth,updateSub);
+router.route('/update/').put(auth,createSub);
+router.route('/delete/').post(auth,deleteSub);
 
-router.route('/create/:id').post(protect,createSub);
-router.route('/getSubs/:id').get(getSubs);
 
 module.exports = router;

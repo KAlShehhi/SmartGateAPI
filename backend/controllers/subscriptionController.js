@@ -43,8 +43,6 @@ const createSub = asyncHandler(async (req, res) =>{
     }
 });
 
-
-
 // @desc    get all subscriptions that a specific gym offers
 // @route   GET /api/subscription/getSubs/:gymId
 // @access  public
@@ -62,8 +60,13 @@ const getSubs = asyncHandler(async(req, res) => {
     }
 });
 
+// @desc    get one subscription
+// @route   PUT /api/subscription/getSub/:subid
+// @access  private
+const getSub = asyncHandler(async(req, res) =>{});
+
 // @desc    update a subscription
-// @route   PUT /api/subscription/:subid
+// @route   PUT /api/subscription/
 // @access  private
 const updateSub = asyncHandler(async(req, res) =>{
     const subid = req.params.id
@@ -83,7 +86,7 @@ const updateSub = asyncHandler(async(req, res) =>{
                 })
             }else{
                 res.status(400).json({
-                   msg: 'User is not authorized'
+                    msg: 'User is not authorized'
                 })
             }
         }else{
@@ -99,4 +102,11 @@ const updateSub = asyncHandler(async(req, res) =>{
 });
 
 
-module.exports = {createSub, getSubs, updateSub}
+// @desc    delete a subscription
+// @route   PUT /api/subscription/delete
+// @access  private
+const deleteSub = asyncHandler(async(req, res) =>{});
+
+
+
+module.exports = {createSub, getSubs, getSub, updateSub, deleteSub}

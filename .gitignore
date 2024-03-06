@@ -2,3 +2,4 @@ node_modules
 .env
 snippets.cs
 try.cs
+missingFeatures.txt
