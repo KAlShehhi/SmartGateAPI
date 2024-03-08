@@ -5,11 +5,10 @@ const Subscription = require('../models/subscriptionModel');
 
 
 // @desc    let gym owner create a subscripton model
-// @route   POST /api/subscription/create/:id
+// @route   POST /api/subscription/create/
 // @access  Private
 const createSub = asyncHandler(async (req, res) =>{
-    const userID = req.params.id
-    const {subName, subType} = req.body;
+    const {subName, subType, userID} = req.body;
     const user = await User.findById({userID});
     if(!user){ 
         res.status(400).json({

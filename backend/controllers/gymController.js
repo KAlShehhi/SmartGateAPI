@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Gym = require('../models/gymModel');
 const User = require('../models/userModel');
+const { default: mongoose } = require('mongoose');
 // @desc    Get gyms
 // @route   GET /api/gyms
 // @access  Private
@@ -145,24 +146,16 @@ const deleteGym = asyncHandler(async (req, res) => {
 // @route   GET /api/gyms/:id
 // @access  Public
 const getGym = asyncHandler(async (req, res) => {
+    if(!(mongoose.isValidObjectId(req.params.id))){
+        res.status(400);
+        throw new Error('Invalid id');
+    }
     const gym = await Gym.findById(req.params.id);
     if(!gym){
         res.status(400);
         throw new Error('Gym not found!');
     }
-    const user = await User.findById(req.user.id);
-    //check auth
-    if(!user){
-        res.status(401)
-        throw new Error('User not found');
-    }
-    //check if user is the one who created the gym
-    if(gym.user.toString() !== user.id){
-        res.status(401)
-        throw new Error('User not authorized');
-    }
-    const deletedGym = await Gym.findByIdAndDelete(req.params.id);
-    res.status(200).json({message : `Delete Gym ${req.params.id}`})
+    res.status(200).json(gym);
 });
 
 
