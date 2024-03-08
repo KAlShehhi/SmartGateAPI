@@ -6,8 +6,8 @@ const { auth } = require('../middleware/authMiddleware');
 
 router.route('/get/').get(getSub);
 router.route('/getSub/:id').get(getSubs);
-router.route('/create/').post(auth,updateSub);
-router.route('/update/').put(auth,createSub);
+router.route('/create/').post(auth,createSub);
+router.route('/update/').put(auth, updateSub);
 router.route('/delete/').post(auth,deleteSub);
 
 
