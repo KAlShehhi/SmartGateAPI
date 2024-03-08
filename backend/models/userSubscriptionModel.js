@@ -11,11 +11,19 @@ const userSubModel = mongoose.Schema({
         required: true,
         ref: 'Gym'
     }, 
+    subID: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Subscription'
+    },
     startDate: {
         type: Date,
         require:true
+    },
+    endDate: {
+        type: Date,
+        require:true
     }
-
 });
 
 
