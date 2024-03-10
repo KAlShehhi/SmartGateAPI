@@ -4,8 +4,8 @@ const {createSub, getSubs, getSub, updateSub, deleteSub} = require('../controlle
 const { auth } = require('../middleware/authMiddleware');
 
 
-router.route('/get/').get(getSub);
-router.route('/getSub/:id').get(getSubs);
+router.route('/get/:id').get(getSub);
+router.route('/getSubs/:id').get(getSubs);
 router.route('/create/').post(auth,createSub);
 router.route('/update/').put(auth, updateSub);
 router.route('/delete/').post(auth,deleteSub);

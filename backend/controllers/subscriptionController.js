@@ -7,104 +7,173 @@ const Subscription = require('../models/subscriptionModel');
 // @desc    let gym owner create a subscripton model
 // @route   POST /api/subscription/create/
 // @access  Private
-const createSub = asyncHandler(async (req, res) =>{
-    const {subName, subType, userID} = req.body;
-    const user = await User.findById({userID});
-    if(!user){ 
-        res.status(400).json({
-            msg: 'User does not exists'
-        })
-    }else{
-        if(user.isGymOwner){
-            //Create subscription
-            const subscription = await Subscription.create({
-                gymID: user.gymID,
-                subName,
-                subType
-            })
-            if(subscription){
-                res.status(200).json({
-                    userId: user.id,
-                    gymID: subscription.gymID,
-                    subName,
-                    subType
-                });
-            }else{
-                res.status(400).json({
-                    msg: 'Subscription invalid'
-                })
-            }
-        }else{
-            res.status(400).json({
-                msg: 'User is not authorized'
-            })
+const createSub = asyncHandler(async (req, res) => {
+    console.log("!23");
+    const {subName, subType, subPrice, userID, gymID} = req.body;
+
+    // Check for required fields
+    if (!subName || !subType || !subPrice) {
+        return res.status(400).json({
+            msg: 'Bad request, missing required fields'
+        });
+    }
+    try {
+        // Verify user exists and is a gym owner
+        const user = await User.findById(userID);
+        if (!user) {
+            return res.status(400).json({
+                msg: 'User does not exist'
+            });
         }
+        
+        if (!user.isGymOwner) {
+            return res.status(400).json({
+                msg: 'User unauthorized, not a gym owner'
+            });
+        }
+        // Create subscription
+        const subscription = await Subscription.create({
+            gymID,
+            subName,
+            subType,
+            subPrice,
+        });
+        // Verify subscription was created successfully
+        if (subscription) {
+            console.log(`Subscription:${subscription.id} created successfuly`.green);
+            res.status(200).json(subscription);
+        } else {
+            return res.status(400).json({
+                msg: 'Failed to create subscription'
+            });
+        }
+    } catch (error) {
+        console.error("Error creating subscription:", error);
+        return res.status(500).json({
+            msg: 'Internal Server Error'
+        });
     }
 });
 
+
 // @desc    get all subscriptions that a specific gym offers
-// @route   GET /api/subscription/getSubs/:gymId
+// @route   GET /api/subscription/getSubs/:gymID
 // @access  public
 const getSubs = asyncHandler(async(req, res) => {
-    const gymID = req.params.id;
-    const subs = await Subscription.find({gymID: gymID});
-    if(subs){
-        res.status(200).json({
-            subs
+    if(!req.params.id){ 
+        return res.status(400).json({
+            msg: 'No gym ID provided'
         });
-    }else{
-        res.status(400).json({
-            msg: 'Gym does not have any subscription options'
+    }
+    const gymID = req.params.id; 
+    try {
+        const gym = await Gym.findById(gymID);
+        if (!gym) {
+            return res.status(400).json({
+                msg: 'Gym does not exist'
+            });
+        }
+        const subs = await Subscription.find({gymID: gymID});
+        const transformedSubs = subs.map(sub => ({
+            subID: sub._id,
+            gymID: sub.gymID,
+            subName: sub.subName,
+            subType: sub.subType,
+            subPrice: sub.subPrice,
+        }));
+        res.status(200).json(transformedSubs);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            msg: 'Server error: getting subs'
         });
     }
 });
 
 // @desc    get one subscription
-// @route   PUT /api/subscription/getSub/:subid
+// @route   GET /api/subscription/get/:subID
 // @access  private
-const getSub = asyncHandler(async(req, res) =>{});
+const getSub = asyncHandler(async(req, res) =>{
+    if(!req.params.id){
+        return res.status(400).json({
+            msg: 'No sub ID provided'
+        });
+    }
+    const subID = req.params.id;
+    try{
+        const sub = await Subscription.findById(subID);
+        if(!sub){
+            return res.status(400).json({
+                msg: 'Subscription does not exist'
+            });
+        }
+        const subResponse = {
+            subID: sub._id,
+            gymID: sub.gymID,
+            subName: sub.subName,
+            subType: sub.subType,
+            subPrice: sub.subPrice,
+        };
+        res.status(200).json(subResponse);
+    } catch (error) {
+        console.error(error); 
+        return res.status(500).json({
+            msg: 'Server error: getting sub'
+        });
+    }
+});
+
 
 // @desc    update a subscription
-// @route   PUT /api/subscription/
+// @route   PUT /api/subscription/update
 // @access  private
 const updateSub = asyncHandler(async(req, res) =>{
-    const subid = req.params.id
-    const userID = req.user.id
-    const sub = await Subscription.findById({subid});
-    const user = await User.findById({userID});
-    if(sub){
-        const gymID = sub.gymID;
-        const subID = sub.id;
-        if(user){
-            if(user.gymID === gymID){
-                const updatedSub = await Subscription.findByIdAndUpdate({
-                    subID,
-                    gymID,
-                    subName: req.body.subName,
-                    subType: req.body.subType,
-                })
-            }else{
-                res.status(400).json({
-                    msg: 'User is not authorized'
-                })
-            }
-        }else{
-            res.status(400).json({
-                msg: 'User not found'
-            })
+
+    const {subName, subType, subPrice, userID, subID, gymID} = req.body;
+    if(!subName || !subType || !subPrice|| !subID || !gymID){
+        return res.status(400).json({
+            msg: 'Invalid input'
+        });
+    }
+    try{
+        const gym = await Gym.findById(gymID);
+        if (!gym) {
+            return res.status(400).json({
+                msg: 'Gym does not exist'
+            });
         }
-    }else{
-        res.status(400).json({
-            msg: 'Subscription not found'
+        const user = await User.findById(userID);
+        if (!user || (user.gymID.toString() !== gymID)) {
+            return res.status(401).json({
+                msg: "Not authorized"
+            });
+        }
+        const newSub = await Subscription.findByIdAndUpdate(subID,{
+            subName,
+            subPrice,
+            subType
+        }, {new : true});
+        if (!newSub) {
+            return res.status(404).json({
+                msg: 'Subscription not found'
+            });
+        }
+    }catch (error) {
+        console.error(error); 
+        return res.status(500).json({
+            msg: 'Server error: updating class'
         });
     }
 });
 
 
 // @desc    delete a subscription
-// @route   PUT /api/subscription/delete
+// @route   DELETE /api/subscription/delete/:subID/:userID
 // @access  private
-const deleteSub = asyncHandler(async(req, res) =>{});
+const deleteSub = asyncHandler(async(req, res) =>{
+    const {subID, userID } = req.params;
+    
+});
 
 
 

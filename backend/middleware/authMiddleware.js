@@ -33,6 +33,10 @@ const auth = asyncHandler(async(req, res, next) =>{
       res.status(400);
       throw new Error('No token');
   }
+  if(!userID){
+    res.status(400);
+    throw new Error('No user ID');
+}
   //Check token
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
       if(err){

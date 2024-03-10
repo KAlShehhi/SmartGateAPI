@@ -49,7 +49,13 @@ const createClass = asyncHandler(async (req, res) => {
 // @route   GET /api/class/getGymClasses/:id
 // @access  Public
 const getGymClasses = asyncHandler(async (req, res) => {
+    if(!req.params.id){
+        return res.status(400).json({
+            msg: 'no gym id'
+        })
+    }
     const gymID = req.params.id;
+    console.log(gymID);
     try{
         const gym = await Gym.findById(gymID);
         if(!gym){
@@ -87,7 +93,7 @@ const getClass = asyncHandler(async (req, res) => {
 });
 
 // @desc    deletes class
-// @route   DELETE /api/class/deleteClass/
+// @route   POST /api/class/deleteClass/
 // @access  Private
 const deleteClass = asyncHandler(async (req, res) => {
     const {gymID, classID, userID } = req.body;

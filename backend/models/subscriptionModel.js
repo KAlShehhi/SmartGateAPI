@@ -14,7 +14,7 @@ const subscriptionModel = mongoose.Schema({
         type : String,
         required: [true, 'Please add a type']
     },
-    price: {
+    subPrice: {
         type : String,
         required: [true, 'Please add a type']
     },
