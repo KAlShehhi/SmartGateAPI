@@ -8,7 +8,7 @@ router.route('/get/:id').get(getSub);
 router.route('/getSubs/:id').get(getSubs);
 router.route('/create/').post(auth,createSub);
 router.route('/update/').put(auth, updateSub);
-router.route('/delete/').post(auth,deleteSub);
+router.route('/delete/:subID/:userID/:token').delete(deleteSub);
 
 
 module.exports = router;

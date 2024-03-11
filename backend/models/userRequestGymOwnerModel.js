@@ -18,6 +18,10 @@ const userRequestGymOwnerModel = mongoose.Schema({
         type : String,
         required: [true, 'Please add a email']
     },
+    licenseNumber: {
+        type : String,
+        required: [true, 'Please add a license number']
+    },
 });
 
 module.exports = mongoose.model('UserRequestGymOwner', userRequestGymOwnerModel);

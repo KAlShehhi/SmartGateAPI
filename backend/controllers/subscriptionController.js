@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Gym = require('../models/gymModel');
 const User = require('../models/userModel');
 const Subscription = require('../models/subscriptionModel');
-
+const jwt = require('jsonwebtoken');
 
 // @desc    let gym owner create a subscripton model
 // @route   POST /api/subscription/create/
@@ -158,6 +158,9 @@ const updateSub = asyncHandler(async(req, res) =>{
                 msg: 'Subscription not found'
             });
         }
+        return res.status(200).json({
+            msg: 'done'
+        });
     }catch (error) {
         console.error(error); 
         return res.status(500).json({
@@ -168,11 +171,68 @@ const updateSub = asyncHandler(async(req, res) =>{
 
 
 // @desc    delete a subscription
-// @route   DELETE /api/subscription/delete/:subID/:userID
+// @route   DELETE /api/subscription/delete/:subID/:userID/:token
 // @access  private
 const deleteSub = asyncHandler(async(req, res) =>{
-    const {subID, userID } = req.params;
-    
+    const subID = req.params.subID;
+    const userID = req.params.userID;
+    const token = req.params.token
+
+    if(!token){
+        res.status(400);
+        throw new Error('No token');
+    }
+    //Check token
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if(err){
+            res.status(400);
+            throw new Error('Invalid token');
+        }
+    });
+
+    if(!subID || !userID){
+        return res.status(400).json({
+            msg: 'Invalid input'
+        }); 
+    }
+    try{
+        const user = await User.findById(userID);
+        if(!user){
+            return res.status(400).json({
+                msg: 'User does not exist'
+            }); 
+        }
+        console.log(user);
+        if(!user.isGymOwner){
+            return res.status(400).json({
+                msg: 'User unauthorized'
+            });
+        }
+        const sub = await Subscription.findById(subID);
+        if(!sub){
+            return res.status(404).json({
+                msg: 'Subscription not found'
+            });
+        }
+        if (user.gymID !== sub.gymID.toString()) {
+            return res.status(401).json({
+                msg: "Not authorized"
+            });
+        }
+        const deletedSub = await Subscription.findByIdAndDelete(subID);
+        if (!deletedSub) {
+            return res.status(404).json({
+                msg: 'Subscription not found'
+            });
+        }
+        return res.status(200).json({
+            msg: 'Subscription deleted'
+        });
+    }catch{
+        return res.status(400).json({
+            msg: 'Server error:  deleting subscription'
+        })
+    }
 });
 
 
