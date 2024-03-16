@@ -8,9 +8,7 @@ const jwt = require('jsonwebtoken');
 // @route   POST /api/subscription/create/
 // @access  Private
 const createSub = asyncHandler(async (req, res) => {
-    console.log("!23");
     const {subName, subType, subPrice, userID, gymID} = req.body;
-
     // Check for required fields
     if (!subName || !subType || !subPrice) {
         return res.status(400).json({
@@ -25,7 +23,6 @@ const createSub = asyncHandler(async (req, res) => {
                 msg: 'User does not exist'
             });
         }
-        
         if (!user.isGymOwner) {
             return res.status(400).json({
                 msg: 'User unauthorized, not a gym owner'
@@ -128,7 +125,6 @@ const getSub = asyncHandler(async(req, res) =>{
 // @route   PUT /api/subscription/update
 // @access  private
 const updateSub = asyncHandler(async(req, res) =>{
-
     const {subName, subType, subPrice, userID, subID, gymID} = req.body;
     if(!subName || !subType || !subPrice|| !subID || !gymID){
         return res.status(400).json({
@@ -177,7 +173,6 @@ const deleteSub = asyncHandler(async(req, res) =>{
     const subID = req.params.subID;
     const userID = req.params.userID;
     const token = req.params.token
-
     if(!token){
         res.status(400);
         throw new Error('No token');
@@ -189,7 +184,6 @@ const deleteSub = asyncHandler(async(req, res) =>{
             throw new Error('Invalid token');
         }
     });
-
     if(!subID || !userID){
         return res.status(400).json({
             msg: 'Invalid input'
@@ -234,7 +228,5 @@ const deleteSub = asyncHandler(async(req, res) =>{
         })
     }
 });
-
-
 
 module.exports = {createSub, getSubs, getSub, updateSub, deleteSub}

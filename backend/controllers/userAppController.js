@@ -2,7 +2,6 @@ const asyncHandler = require('express-async-handler');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const UserRequestGymOwner = require('../models/userRequestGymOwnerModel');
-const { use } = require('../routes/adminRoutes');
 
 // @desc    Gets the existing token from the user and validated it
 // @route   POST /api/app/users/validate
@@ -27,8 +26,6 @@ const validateExistingToken = asyncHandler(async(req, res) => {
     });
 });
 
-
-
 // @desc    Sends the hashed password to the app to compare
 // @route   POST /api/app/users/checkPassword
 // @access  Public
@@ -47,7 +44,6 @@ const checkPassword = asyncHandler(async(req, res) => {
         throw new Error('Invalid email and password')
     }
 });
-
 
 // @desc    Authenticate a user
 // @route   POST /api/app/users/login
@@ -85,7 +81,6 @@ const loginUser = asyncHandler(async(req, res) => {
     })
 });
 
-
 // @desc    Register a user 
 // @route   POST /api/app/users/registerUser
 // @access  Public
@@ -102,7 +97,6 @@ const registerUser =  asyncHandler(async(req, res) => {
         res.status(409)
         throw new Error('User already exist')
     }
-
     //Create user
     const user = await User.create({
         firstName,
@@ -117,7 +111,6 @@ const registerUser =  asyncHandler(async(req, res) => {
         isAdmin: false,
         applytoGymStatus:"0"
     });
-
     if(user){
         console.log(`User created (${user.id}) at ${new Date(8.64e15).toString()}`);
         res.status(201).json({
@@ -185,7 +178,6 @@ const applyToBeAGymOwner = asyncHandler(async (req, res) => {
     }
 });
 
-
 // @desc    Check if the user is a gym owner
 // @route   POST /api/app/users/checkGymOwner
 // @access  Public
@@ -222,7 +214,6 @@ const isGymOwnerCheck = asyncHandler(async(req, res) => {
         });
     }
 });
-
 
 // @desc    Check if the user is a gym admin
 // @route   POST /api/app/users/checkAdmin
@@ -289,7 +280,6 @@ const getApplyStatus = asyncHandler(async(req, res) => {
         });
     }
 });
-
 
 // @desc    Get the status code of applying to be a gym owner
 // @route   GET /api/app/users/gymCreated/:id
@@ -361,14 +351,12 @@ const generateToken = (id) => {
     })
 }
 
-
 //Generate JWT token for user login
 const generateAuthToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {
         expiresIn: '30d',
     })
 }
-
 
 module.exports = {
     checkPassword,

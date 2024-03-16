@@ -11,7 +11,7 @@ const getUserGyms = asyncHandler(async (req, res) => {
 });
 
 // @desc    Create gym
-// @route   POST /api/gyms/createGym
+// @route   POST /api/gym/createGym
 // @access  Private
 const createGym = asyncHandler (async (req, res) => {
     console.log("123")
@@ -74,7 +74,7 @@ const createGym = asyncHandler (async (req, res) => {
 
 
 // @desc    Checks if the user have created a gym
-// @route   POST /api/gyms/hasGym
+// @route   POST /api/gym/hasGym
 // @access  Private
 const hasGym = asyncHandler(async (req, res) => {
     const {ownerID} = req.body; 
@@ -92,7 +92,7 @@ const hasGym = asyncHandler(async (req, res) => {
 
 
 // @desc    Update gym
-// @route   PUT /api/gyms/:id
+// @route   PUT /api/gym/:id
 // @access  Private
 const updateGym = asyncHandler (async (req, res) => {
     const gym = await Gym.findById(req.params.id);
@@ -118,7 +118,7 @@ const updateGym = asyncHandler (async (req, res) => {
 });
 
 // @desc    Delete gym
-// @route   DELETE /api/gyms/:id
+// @route   DELETE /api/gym/:id
 // @access  Private
 const deleteGym = asyncHandler(async (req, res) => {
     const gym = await Gym.findById(req.params.id);
@@ -143,7 +143,7 @@ const deleteGym = asyncHandler(async (req, res) => {
 
 
 // @desc    Get a gym
-// @route   GET /api/gyms/:id
+// @route   GET /api/gym/getGym/:id
 // @access  Public
 const getGym = asyncHandler(async (req, res) => {
     if(!(mongoose.isValidObjectId(req.params.id))){
@@ -157,7 +157,6 @@ const getGym = asyncHandler(async (req, res) => {
     }
     res.status(200).json(gym);
 });
-
 
 
 module.exports = {
