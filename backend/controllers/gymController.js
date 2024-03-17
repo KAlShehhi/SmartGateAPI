@@ -109,7 +109,7 @@ const updateGym = asyncHandler (async (req, res) => {
         res.status(400);
         throw new Error('Gym not found!');
     }
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(ownerID);
     //check auth
     if(!user){
         res.status(401)
