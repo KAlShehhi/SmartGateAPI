@@ -14,7 +14,6 @@ const getUserGyms = asyncHandler(async (req, res) => {
 // @route   POST /api/gym/createGym
 // @access  Private
 const createGym = asyncHandler (async (req, res) => {
-    console.log("123")
     const {name, phoneNumber, allowedGenders, workingHours, fullCapacity, emirate, googleMapsLink, lat , lng, swimmingPool, crossfit, cafe, restaurant, sauna, lockers, changingRooms, coaches, freeCoaches, description, ownerID } = req.body;   
     if (!name || !phoneNumber || !allowedGenders || !workingHours || !fullCapacity || 
         !emirate || !googleMapsLink || lat === undefined || lng === undefined || 
@@ -95,6 +94,16 @@ const hasGym = asyncHandler(async (req, res) => {
 // @route   PUT /api/gym/:id
 // @access  Private
 const updateGym = asyncHandler (async (req, res) => {
+    const {name, phoneNumber, allowedGenders, workingHours, fullCapacity, emirate, googleMapsLink, lat , lng, swimmingPool, crossfit, cafe, restaurant, sauna, lockers, changingRooms, coaches, freeCoaches, description, ownerID } = req.body;   
+    if (!name || !phoneNumber || !allowedGenders || !workingHours || !fullCapacity || 
+        !emirate || !googleMapsLink || lat === undefined || lng === undefined || 
+        swimmingPool === undefined || crossfit === undefined || cafe === undefined || 
+        restaurant === undefined || sauna === undefined || lockers === undefined || 
+        changingRooms === undefined || coaches === undefined || freeCoaches === undefined || 
+        !description, !ownerID) {
+        return res.status(400).json({ message: 'Please enter all fields' });
+    
+    }
     const gym = await Gym.findById(req.params.id);
     if(!gym){
         res.status(400);

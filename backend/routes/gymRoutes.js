@@ -12,5 +12,7 @@ const {auth} = require('../middleware/authMiddleware');
 
 router.route('/createGym').post(auth, createGym);
 router.route('/hasGym').post(auth, hasGym);
+router.route('/updateGym/:id').put(auth, updateGym);
 router.route('/getGym/:id').get(getGym);
+
 module.exports = router;
