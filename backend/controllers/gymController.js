@@ -94,6 +94,10 @@ const hasGym = asyncHandler(async (req, res) => {
 // @route   PUT /api/gym/:id
 // @access  Private
 const updateGym = asyncHandler (async (req, res) => {
+    if(!(mongoose.isValidObjectId(req.params.id))){
+        res.status(400);
+        throw new Error('Invalid gym id');
+    }
     const {name, phoneNumber, allowedGenders, workingHours, fullCapacity, emirate, googleMapsLink, lat , lng, swimmingPool, crossfit, cafe, restaurant, sauna, lockers, changingRooms, coaches, freeCoaches, description, ownerID } = req.body;   
     if (!name || !phoneNumber || !allowedGenders || !workingHours || !fullCapacity || 
         !emirate || !googleMapsLink || lat === undefined || lng === undefined || 
@@ -116,7 +120,7 @@ const updateGym = asyncHandler (async (req, res) => {
         throw new Error('User not found');
     }
     //check if user is the one who created the gym
-    if(gym.user.toString() !== user.id){
+    if(gym.ownerID.toString() !== user.id){
         res.status(401)
         throw new Error('User not authorized');
     }
