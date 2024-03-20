@@ -23,9 +23,15 @@ const makeUserAGymOwner = asyncHandler(async(req, res) => {
         }
     });
     const userAdmin = await User.findOne({ _id: adminID});
+
     if(userAdmin){
         if(userAdmin.isAdmin){
             const user = await User.findById(userID);
+            const requestGym = await UserRequestGymOwner.findOne({userID})
+            if(!requestGym){
+                res.status(400);
+                throw new Error('Request not found!');
+            }
             if(!user){
                 res.status(400);
                 throw new Error('User not found!');
@@ -41,7 +47,8 @@ const makeUserAGymOwner = asyncHandler(async(req, res) => {
                         userID,
                         firstName: user.firstName,
                         lastName: user.lastName,
-                        email: user.email
+                        email: user.email,
+                        licenseNumber : requestGym.licenseNumber
                     });
                     await UserRequestGymOwner.findOneAndDelete({userID});
                     res.status(200).json({
@@ -53,7 +60,8 @@ const makeUserAGymOwner = asyncHandler(async(req, res) => {
                         userID,
                         firstName: user.firstName,
                         lastName: user.lastName,
-                        email: user.email
+                        email: user.email,
+                        licenseNumber : requestGym.licenseNumber
                     });
                     await UserRequestGymOwner.findOneAndDelete({userID});
                     res.status(200).json({

@@ -135,37 +135,43 @@ const registerUser =  asyncHandler(async(req, res) => {
 // @route   POST /api/app/users/applyGymOwner
 // @access  Public
 const applyToBeAGymOwner = asyncHandler(async (req, res) => {
-    const { userID } = req.body;
-    console.log(req.body);
+    const { userID, licenseNumber} = req.body;
     
     if (!userID) {
         return res.status(400).json({
             msg: 'No user id'
         });
     }
-
+    if(!licenseNumber){
+        return res.status(400).json({
+            msg: 'no license number'
+        });
+    }
     try {
         const user = await User.findById(userID);
-        
         if (!user) {
             return res.status(400).json({
                 msg: 'User not found'
             });
         }
-
         const newUser = await User.findOneAndUpdate(
             { _id: userID },
             { applytoGymStatus: 1 },
             { new: true }
         );
-
         const userRequest = await UserRequestGymOwner.create({
             userID: newUser._id,
             firstName: newUser.firstName,
             lastName: newUser.lastName,
-            email: newUser.email
+            email: newUser.email,
+            licenseNumber: licenseNumber
         });
-
+        
+        if(!userRequest){
+            return res.status(400).json({
+                msg: 'Error creating new request'
+            });
+        }
         return res.status(200).json({
             msg: 'done'
         });

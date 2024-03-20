@@ -127,7 +127,8 @@ const updateGym = asyncHandler (async (req, res) => {
     const updatedGym = await Gym.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
     });
-    res.status(200).json({message : `Update Gym ${req.params.id}`, updatedGym});
+    console.log(`Updated Gym: ${updatedGym.id}`.green);
+    res.status(200).json({updatedGym});
 });
 
 // @desc    Delete gym
@@ -171,6 +172,39 @@ const getGym = asyncHandler(async (req, res) => {
     res.status(200).json(gym);
 });
 
+// @desc    Get gyms in a specific location
+// @route   GET /api/gym/getGyms/:lat/:lng
+// @access  Public
+const getGyms = asyncHandler(async (req, res) => {
+    try {
+        const { lat, lng } = req.params;
+        if (!lat || !lng) {
+            return res.status(400).send({ message: 'Latitude and longitude are required.' });
+        }
+        const userLocation = [parseFloat(lng), parseFloat(lat)];
+        
+        // Use the aggregation pipeline with $geoNear
+        const gymsNearby = await Gym.aggregate([
+            {
+                $geoNear: {
+                    near: { type: "Point", coordinates: userLocation },
+                    distanceField: "distance", // Field name to output the distance to each gym
+                    spherical: true,
+                    maxDistance: 5000 // Maximum distance in meters
+                }
+            }
+        ]);
+        
+        // Modify the output if necessary to fit your response structure
+        // For example, convert distance from meters to a more suitable unit or format
+
+        res.json(gymsNearby);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: 'Server error occurred.' });
+    }
+})
+
 
 module.exports = {
     getUserGyms, 
@@ -178,5 +212,6 @@ module.exports = {
     updateGym,
     deleteGym,
     hasGym,
-    getGym
+    getGym,
+    getGyms
 }
