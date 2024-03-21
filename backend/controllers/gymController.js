@@ -182,22 +182,16 @@ const getGyms = asyncHandler(async (req, res) => {
             return res.status(400).send({ message: 'Latitude and longitude are required.' });
         }
         const userLocation = [parseFloat(lng), parseFloat(lat)];
-        
-        // Use the aggregation pipeline with $geoNear
         const gymsNearby = await Gym.aggregate([
             {
                 $geoNear: {
                     near: { type: "Point", coordinates: userLocation },
-                    distanceField: "distance", // Field name to output the distance to each gym
+                    distanceField: "distance", 
                     spherical: true,
-                    maxDistance: 5000 // Maximum distance in meters
+                    maxDistance: 15000 // Maximum distance in meters
                 }
             }
         ]);
-        
-        // Modify the output if necessary to fit your response structure
-        // For example, convert distance from meters to a more suitable unit or format
-
         res.json(gymsNearby);
     } catch (error) {
         console.error(error);
