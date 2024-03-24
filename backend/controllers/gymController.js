@@ -190,6 +190,16 @@ const getGyms = asyncHandler(async (req, res) => {
                     spherical: true,
                     maxDistance: 15000 // Maximum distance in meters
                 }
+            },
+            {
+                $project: {
+                    gymID: "$_id",
+                    name: 1,
+                    rating: 1,
+                    emirate: 1,
+                    distance: 1,
+                    workingHours: 1
+                }
             }
         ]);
         res.json(gymsNearby);
@@ -197,7 +207,8 @@ const getGyms = asyncHandler(async (req, res) => {
         console.error(error);
         res.status(500).send({ message: 'Server error occurred.' });
     }
-})
+});
+
 
 
 module.exports = {
