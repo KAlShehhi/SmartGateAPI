@@ -1,7 +1,9 @@
 const asyncHandler = require('express-async-handler');
+const mongoose = require('mongoose');
 const Gym = require('../models/gymModel');
 const User = require('../models/userModel');
 const Subscription = require('../models/subscriptionModel');
+const UserSubscription = require('../models/userSubscriptionModel');
 const jwt = require('jsonwebtoken');
 
 // @desc    let gym owner create a subscripton model
@@ -229,4 +231,73 @@ const deleteSub = asyncHandler(async(req, res) =>{
     }
 });
 
-module.exports = {createSub, getSubs, getSub, updateSub, deleteSub}
+
+// @desc    Subscribes a user to a gym
+// @route   POST /api/subscription/subUser/:subID/:userID/:token
+// @access  private
+const subUser = asyncHandler(async(req, res) =>{
+    const { userID, subID } = req.body;
+    
+    if(!userID || !subID){
+        return res.status(400).json({ msg: 'Bad request, missing required fields' });
+    }
+
+    //check if user is already subscribed
+    const userIDObj = new mongoose.Types.ObjectId(userID);
+    const checkSubs = await UserSubscription.find({userID: userIDObj});
+    const isAlreadySubscribed = checkSubs.some(subscription => subscription.subID.toString() === subID);
+    if(isAlreadySubscribed){
+        return res.status(409).json({ msg: 'User is already subscribed to this subscription' });
+    }
+
+
+    const sub = await Subscription.findById(subID);
+    if (!sub) {
+        return res.status(404).json({
+            msg: 'Subscription not found'
+        });
+    }
+
+    let startDate = new Date();
+    let endDate;
+    switch(sub.subType.toLowerCase()){
+        case "yearly":
+            endDate = new Date(startDate);
+            endDate.setFullYear(startDate.getFullYear() + 1);
+            break;
+        case "monthly":
+            endDate = new Date(startDate);
+            endDate.setMonth(startDate.getMonth() + 1);
+            break;
+        case "daily":
+            endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 1);
+            break;
+        default:
+            return res.status(400).json({
+                msg: 'Invalid subscription type'
+            });
+    }
+
+    // Create user subscription
+    const userSub = await UserSubscription.create({
+        userID,
+        subID,
+        startDate,
+        endDate
+    });
+
+    if(!userSub){
+        return res.status(500).json({
+            msg: 'Cannot subscribe user, server error'
+        });
+    }
+
+    // Successfully subscribed
+    return res.status(200).json({
+        msg: 'User subscribed'
+    });
+});
+
+
+module.exports = {createSub, getSubs, getSub, updateSub, deleteSub, subUser}

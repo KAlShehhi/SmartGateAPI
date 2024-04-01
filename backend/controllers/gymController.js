@@ -51,6 +51,7 @@ const createGym = asyncHandler (async (req, res) => {
                 });
                 if(gym){
                     await User.findByIdAndUpdate({_id: ownerID}, {gymID: gym._id}, {new: true});
+                    console.log(`Gym ${gym.id} has been created`);
                     return res.status(201).json(gym)
                 }
                 return res.status(400).json({ 
@@ -71,7 +72,6 @@ const createGym = asyncHandler (async (req, res) => {
     }
 });
 
-
 // @desc    Checks if the user have created a gym
 // @route   POST /api/gym/hasGym
 // @access  Private
@@ -88,7 +88,6 @@ const hasGym = asyncHandler(async (req, res) => {
         return es.status(400);
     }
 });
-
 
 // @desc    Update gym
 // @route   PUT /api/gym/:id
@@ -160,16 +159,22 @@ const deleteGym = asyncHandler(async (req, res) => {
 // @route   GET /api/gym/getGym/:id
 // @access  Public
 const getGym = asyncHandler(async (req, res) => {
-    if(!(mongoose.isValidObjectId(req.params.id))){
-        res.status(400);
-        throw new Error('Invalid id');
+    try{
+        if(!(mongoose.isValidObjectId(req.params.id))){
+            res.status(400);
+            throw new Error('Invalid id');
+        }
+        const gym = await Gym.findById(req.params.id);
+        if(!gym){
+            res.status(400);
+            throw new Error('Gym not found!');
+        }
+        console.log(123);
+        res.status(200).json(gym);
+    }catch(error){
+        console.error(error);
+        res.status(500).send({ message: 'Server error occurred.' });
     }
-    const gym = await Gym.findById(req.params.id);
-    if(!gym){
-        res.status(400);
-        throw new Error('Gym not found!');
-    }
-    res.status(200).json(gym);
 });
 
 // @desc    Get gyms in a specific location
