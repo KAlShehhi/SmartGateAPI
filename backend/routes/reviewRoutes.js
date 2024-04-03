@@ -11,7 +11,7 @@ const {
 
 router.route('/getReviews/:gymID').get(getReviews);
 router.route('/writeReview').post(auth, writeReview);
-router.route('/updateReview/:id/:userID').put(auth, updateReview);
-router.route('/deleteReview/:id/:userID').delete(auth, deleteReview);
+router.route('/updateReview/').put(auth, updateReview);
+router.route('/deleteReview/:reviewID/:userID').delete(auth, deleteReview);
 
 module.exports = router;

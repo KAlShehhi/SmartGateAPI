@@ -16,7 +16,7 @@ const reviewSchema = mongoose.Schema({
         required: true,
     },
     rating:{
-        type: int,
+        type: String,
         required: true,
     }
 }, {timestamps: true});

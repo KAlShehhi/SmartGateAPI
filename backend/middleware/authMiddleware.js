@@ -29,6 +29,7 @@ const protect = asyncHandler(async (req, res, next) => {
 
 const auth = asyncHandler(async(req, res, next) =>{
   const {token, userID} = req.body;
+  console.log(req.body);
   if(!token){
       res.status(400);
       throw new Error('No token');
