@@ -10,23 +10,49 @@ const getUserGyms = asyncHandler(async (req, res) => {
     res.status(200).json(gyms);
 });
 
-// @desc    Create gym
-// @route   POST /api/gym/createGym
-// @access  Private
-const createGym = asyncHandler (async (req, res) => {
-    const {name, phoneNumber, allowedGenders, workingHours, fullCapacity, emirate, googleMapsLink, lat , lng, swimmingPool, crossfit, cafe, restaurant, sauna, lockers, changingRooms, coaches, freeCoaches, description, ownerID } = req.body;   
-    if (!name || !phoneNumber || !allowedGenders || !workingHours || !fullCapacity || 
-        !emirate || !googleMapsLink || lat === undefined || lng === undefined || 
-        swimmingPool === undefined || crossfit === undefined || cafe === undefined || 
-        restaurant === undefined || sauna === undefined || lockers === undefined || 
-        changingRooms === undefined || coaches === undefined || freeCoaches === undefined || 
-        !description, !ownerID) {
-        return res.status(400).json({ message: 'Please enter all fields' });
+
+
+
+const createGym = asyncHandler(async (req, res) => {
+    const {
+        name,
+        phoneNumber,
+        allowedGenders,
+        workingHours,
+        fullCapacity,
+        emirate,
+        googleMapsLink,
+        lat,
+        lng,
+        swimmingPool,
+        crossfit,
+        cafe,
+        restaurant,
+        sauna,
+        lockers,
+        changingRooms,
+        coaches,
+        freeCoaches,
+        description,
+        ownerID
+    } = req.body;
+    if (!name || !phoneNumber || !allowedGenders || !workingHours || !fullCapacity ||
+        !emirate || !googleMapsLink || lat === undefined || lng === undefined ||
+        swimmingPool === undefined || crossfit === undefined || cafe === undefined ||
+        restaurant === undefined || sauna === undefined || lockers === undefined ||
+        changingRooms === undefined || coaches === undefined || freeCoaches === undefined ||
+        !description || !ownerID) {
+        return res.status(400).json({
+            message: 'Please enter all fields'
+        });
     }
-    try{
+    try {
+        // Check if the owner user exists and is authorized
         const user = await User.findById(ownerID);
-        if(user){
-            if(user.isGymOwner){
+        if (user) {
+            if (user.isGymOwner) {
+                console.log(lng);
+                // Create the gym with location details
                 const gym = await Gym.create({
                     ownerID,
                     name,
@@ -38,6 +64,10 @@ const createGym = asyncHandler (async (req, res) => {
                     googleMapsLink,
                     lat,
                     lng,
+                    location: {
+                        type: "Point",
+                        coordinates: [lng, lat]
+                    },
                     swimmingPool,
                     crossfit,
                     cafe,
@@ -49,28 +79,30 @@ const createGym = asyncHandler (async (req, res) => {
                     freeCoaches,
                     description,
                 });
-                if(gym){
-                    await User.findByIdAndUpdate({_id: ownerID}, {gymID: gym._id}, {new: true});
+                if (gym) {
+                    await User.findByIdAndUpdate({ _id: ownerID }, {gymID: gym._id}, {new: true});
                     console.log(`Gym ${gym.id} has been created`);
-                    return res.status(201).json(gym)
+                    return res.status(201).json(gym);
                 }
-                return res.status(400).json({ 
-                    msg: 'Error creating gym' 
+                return res.status(400).json({
+                    msg: 'Error creating gym'
                 });
             }
-            return res.status(401 ).json({ 
-                msg: 'User not unauthorized' 
+            return res.status(401).json({
+                msg: 'User unauthorized'
             });
         }
-        return res.status(400).json({ 
-            msg: 'User does not exist' 
+        return res.status(400).json({
+            msg: 'User does not exist'
         });
-    }catch{
-        return res.status(400).json({ 
-            msg: 'Error creating gym, invalid input' 
-        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            error: error.message
+        });
     }
 });
+
 
 // @desc    Checks if the user have created a gym
 // @route   POST /api/gym/hasGym
@@ -169,7 +201,6 @@ const getGym = asyncHandler(async (req, res) => {
             res.status(400);
             throw new Error('Gym not found!');
         }
-        console.log(123);
         res.status(200).json(gym);
     }catch(error){
         console.error(error);

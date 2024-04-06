@@ -102,8 +102,15 @@ const gymSchema = mongoose.Schema({
         required: true,
     },
     location: {
-        type: { type: String, enum: ['Point'], required: true },
-        coordinates: { type: [Number], required: true }, // [longitude, latitude]
+        type: {
+            type: String,
+            enum: ['Point'],
+            required: true
+        },
+        coordinates: {
+            type: [Number],
+            required: true
+        }
     },
 }, {
     timestamps: true

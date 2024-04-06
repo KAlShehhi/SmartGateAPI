@@ -6,6 +6,6 @@ const {protect} = require('../middleware/authMiddleware');
 
 
 router.route('/check').get(checkServer);
-router.route('/entry/:gymID/:userID').post(protect, userEntry);
-router.route('/exit/:gymID/:userID').post(protect, userExit);
+router.route('/entry/:gymID/:userID').get(userEntry);
+router.route('/exit/:gymID/:userID').get(userExit);
 module.exports = router;

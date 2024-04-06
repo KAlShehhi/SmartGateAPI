@@ -77,45 +77,87 @@ const writeReview = asyncHandler(async (req, res) => {
 // @route   PUT /api/review/updateReview/
 // @access  Private
 const updateReview = asyncHandler(async (req, res) => {
-    const {rating, review, gymID, reviewID, userID} = req.body;
-
-    if(!rating || !review || !gymID || !reviewID){
-        return res.status(400).json({
-            msg: 'Bad request, write all required fields.'
-        });
-    }
-
-    const rev = await Review.findById(reviewID);
-    if (rev.userID.toString() !== userID) {
-        return res.status(401).json({ msg: 'User not authorized to update this review' });
-    }
-
-    const newReview = await Review.findByIdAndUpdate(reviewID, {
-        review,
-        rating
-    }, {new: true});
-    if(!newReview){
-        return res.status(404).json({
-            msg: 'Cannot find review'
-        }); 
-    }
-    const reviews = await Review.find({gymID :  new mongoose.Types.ObjectId(gymID)});
-    
-    if (reviews.length > 0) {
-        const totalRating = reviews.reduce((acc, {rating}) => acc + rating, 0);
-        const newGymRating = totalRating / reviews.length;
-        const updatedGym = await Gym.findByIdAndUpdate(gymID, {rating: newGymRating}, {new: true});
-        if (!updatedGym) {
-            return res.status(500).json({
-                msg: 'Internal server error'
+    try{
+        const {rating, review, gymID, reviewID, userID} = req.body;
+        if(!rating || !review || !gymID || !reviewID){
+            return res.status(400).json({
+                msg: 'Bad request, write all required fields.'
             });
         }
+    
+        const rev = await Review.findById(reviewID);
+        if(!rev){
+            return res.status(404).json({
+                msg: 'Cannot find review'
+            }); 
+        }
+        if (rev.userID.toString() !== userID) {
+            return res.status(401).json({ msg: 'User not authorized to update this review' });
+        }
+    
+        const newReview = await Review.findByIdAndUpdate(reviewID, {
+            review,
+            rating
+        }, {new: true});
+        if(!newReview){
+            return res.status(404).json({
+                msg: 'Cannot find review'
+            }); 
+        }
+    
+        const reviews = await Review.find({gymID :  new mongoose.Types.ObjectId(gymID)});
+        if (reviews.length === 0) {
+            return res.status(404).json({
+                msg: 'No reviews found for the gym'
+            });
+        }else if (reviews.length === 1){
+            const updatedGym = await Gym.findByIdAndUpdate(gymID, {rating: rating}, {new: true});
+            if(!updatedGym){
+                return res.status(500).json({
+                    msg: 'Internal server error'
+                }); 
+            }
+        }else {
+            //new rating 
+            const gym = await Gym.findById(gymID);
+            if(!gym){
+                return res.status(500).json({
+                    msg: 'Internal server error'
+                }); 
+            }
+            let totalRating = 0;
+            reviews.forEach(review => {
+                totalRating += Number(review.rating); // Convert rating from string to number and add to total
+            });
+            const newAverageRating = totalRating / reviews.length;
+            const updatedGym = await Gym.findByIdAndUpdate(
+                gymID,
+                { rating: newAverageRating },
+                { new: true }
+            );
+            
+            if (!updatedGym) {
+                return res.status(500).json({
+                    msg: 'Internal server error'
+                });
+            }
+            
+            // Send back the updated gym information or a success message
+            return res.status(200).json({
+                msg: 'Gym rating updated successfully',
+                updatedGym: updatedGym.rating
+            });
+        }
+    
+        return res.status(200).json({
+            msg: "Review updated"
+        });
+    
+    }catch(error){
+        res.status(500);
+        throw new Error(error)
     }
-
-    return res.status(200).json({
-        msg: "Review updated"
-    });
-
+    
 });
 
 // @desc    Delte a review
@@ -136,11 +178,25 @@ const deleteReview = asyncHandler(async (req, res) => {
 
     // Delete the review
     await Review.findByIdAndDelete(reviewID);
-    const reviews = await Review.find({ gymID: review.gymID });
-    const totalRating = reviews.reduce((acc, curr) => acc + curr.rating, 0);
-    const newAverageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
-    await Gym.findByIdAndUpdate(review.gymID, { rating: newAverageRating });
 
+    const reviews = await Review.find({gymID :  new mongoose.Types.ObjectId(gymID)});
+
+    if(reviews.length === 0){
+        await Gym.findByIdAndUpdate(review.gymID, { rating: 0 });
+    }else if(reviews.length === 1){
+        await Gym.findByIdAndUpdate(review.gymID, { rating: reviews[0].rating });
+    }else{
+        let totalRating = 0;
+        reviews.forEach(review => {
+            totalRating += Number(review.rating); 
+        });
+        const newAverageRating = totalRating / reviews.length;
+        const updatedGym = await Gym.findByIdAndUpdate(
+            gymID,
+            { rating: newAverageRating },
+            { new: true }
+        );
+    }
     res.status(200).json({ msg: 'Review deleted successfully' });
 });
 

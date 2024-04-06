@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
 
 // @desc    let gym owner create a subscripton model
 // @route   POST /api/subscription/create/
-// @access  Private
+// @access  PRIVATE
 const createSub = asyncHandler(async (req, res) => {
     const {subName, subType, subPrice, userID, gymID} = req.body;
     // Check for required fields
@@ -57,7 +57,7 @@ const createSub = asyncHandler(async (req, res) => {
 
 // @desc    get all subscriptions that a specific gym offers
 // @route   GET /api/subscription/getSubs/:gymID
-// @access  public
+// @access  PUBLIC
 const getSubs = asyncHandler(async(req, res) => {
     if(!req.params.id){ 
         return res.status(400).json({
@@ -89,9 +89,46 @@ const getSubs = asyncHandler(async(req, res) => {
     }
 });
 
+// @desc    get all subscriptions that are associated with a user
+// @route   GET /api/subscription/getUserSubs/:userID
+// @access  PUBLIC
+const getUserSubs = asyncHandler(async(req, res) => {
+    if(!req.params.id){ 
+        return res.status(400).json({
+            msg: 'No user ID provided'
+        });
+    }
+    const userID = req.params.id; 
+    try {
+        const userSubs = await UserSubscription.find({userID: new mongoose.Types.ObjectId(userID)});
+        if (userSubs.length === 0) {
+            return res.status(404).json({ msg: "No subscriptions found for the given user ID" });
+        }
+        const subs = [];
+        for(let sub of userSubs){
+            console.log(sub.subID);
+            const gymSub = await Subscription.findOne(sub.subID);
+            const gym = await Gym.findOne({_id: gymSub.gymID}, 'name');
+            subs.push({
+                subID: sub.id,
+                gymName: gym.name,
+                startDate: sub.startDate,
+                endDate: sub.endDate,
+            });
+        }
+        res.status(200).json(subs);
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            msg: 'Server error: getting subs'
+        });
+    }
+});
+
 // @desc    get one subscription
 // @route   GET /api/subscription/get/:subID
-// @access  private
+// @access  PRIVATE
 const getSub = asyncHandler(async(req, res) =>{
     if(!req.params.id){
         return res.status(400).json({
@@ -125,7 +162,7 @@ const getSub = asyncHandler(async(req, res) =>{
 
 // @desc    update a subscription
 // @route   PUT /api/subscription/update
-// @access  private
+// @access  PRIVATE
 const updateSub = asyncHandler(async(req, res) =>{
     const {subName, subType, subPrice, userID, subID, gymID} = req.body;
     if(!subName || !subType || !subPrice|| !subID || !gymID){
@@ -170,7 +207,7 @@ const updateSub = asyncHandler(async(req, res) =>{
 
 // @desc    delete a subscription
 // @route   DELETE /api/subscription/delete/:subID/:userID/:token
-// @access  private
+// @access  PRIVATE
 const deleteSub = asyncHandler(async(req, res) =>{
     const subID = req.params.subID;
     const userID = req.params.userID;
@@ -233,14 +270,16 @@ const deleteSub = asyncHandler(async(req, res) =>{
 
 
 // @desc    Subscribes a user to a gym
-// @route   POST /api/subscription/subUser/:subID/:userID/:token
-// @access  private
+// @route   POST /api/subscription/subUser/
+// @access  PRIVATE
 const subUser = asyncHandler(async(req, res) =>{
-    const { userID, subID } = req.body;
-    
-    if(!userID || !subID){
+    console.log(req.body);
+    const { userID, genericID } = req.body;
+    if(!userID || !genericID){
         return res.status(400).json({ msg: 'Bad request, missing required fields' });
     }
+    const subID =  genericID
+
 
     //check if user is already subscribed
     const userIDObj = new mongoose.Types.ObjectId(userID);
@@ -300,4 +339,4 @@ const subUser = asyncHandler(async(req, res) =>{
 });
 
 
-module.exports = {createSub, getSubs, getSub, updateSub, deleteSub, subUser}
+module.exports = {createSub, getSubs, getSub, getUserSubs, updateSub, deleteSub, subUser}
