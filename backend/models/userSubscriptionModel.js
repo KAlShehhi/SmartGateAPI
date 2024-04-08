@@ -6,6 +6,11 @@ const userSubModel = mongoose.Schema({
         required: true,
         ref: 'User'
     },
+    gymID: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Gym'
+    },
     subID: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
@@ -18,6 +23,15 @@ const userSubModel = mongoose.Schema({
     endDate: {
         type: Date,
         require:true
+    },
+    totalVistis: {
+        type: String,
+        default: 0,
+        require:false
+    },
+    meanSpentTime: {
+        type: String,
+        require:false
     }
 });
 

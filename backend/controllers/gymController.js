@@ -11,8 +11,9 @@ const getUserGyms = asyncHandler(async (req, res) => {
 });
 
 
-
-
+// @desc    Create gym
+// @route   POST /api/gym/createGym
+// @access  Private
 const createGym = asyncHandler(async (req, res) => {
     const {
         name,
@@ -244,7 +245,6 @@ const getGyms = asyncHandler(async (req, res) => {
         res.status(500).send({ message: 'Server error occurred.' });
     }
 });
-
 
 
 module.exports = {

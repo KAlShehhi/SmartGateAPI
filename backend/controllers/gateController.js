@@ -5,7 +5,7 @@ const UserEntry = require('../models/gymEntryByUserModel');
 const UserExit = require('../models/gymExitByUserModel');
 const Subscription = require('../models/subscriptionModel');
 const UserSubscription = require('../models/userSubscriptionModel');
-const { default: mongoose } = require('mongoose');
+const { default: mongoose, mongo } = require('mongoose');
 
 // @desc    check if the server is online or not
 // @route   GET /api/gate/check
@@ -24,6 +24,7 @@ const checkServer = asyncHandler(async (req, res) => {
 const userEntry = asyncHandler(async(req, res) => {
     const {userID, gymID} = req.params;
     const user = await User.findById(userID);
+    const currentDate = new Date(); 
     if(!user){
         res.status(400).json({
             msg: 'User does not exist'
@@ -35,26 +36,40 @@ const userEntry = asyncHandler(async(req, res) => {
             msg: 'Gym does not exist'
         });
     }
-    const userSubs = await UserSubscription.find({userID: userID})
-    if(!userSubs){
-        res.status(400).json({
-            msg: 'User does not have any subscritpions'
-        }); 
-    }
-    const subs = await Subscription.find({gymID: gymID});
-    if(!subs){
-        res.status(400).json({
-            msg: 'Gym does not have any subscritpion models'
-        }); 
-    }
-    for(let sub in subs){
-        for(let userS in subs){
-            
+    try{
+        const userSubs = await UserSubscription.find({userID: new mongoose.Types.ObjectId(userID), gymID: new mongoose.Types.ObjectId(gymID)});
+        if(userSubs.length === 0){
+            res.status(401).json({
+                msg: 'Unauthorized'
+            });
         }
-    }    
-    res.status(400).json({
-        msg: 'User does not have any subscritpions'
-    }); 
+
+        const activeSubs = userSubs.filter(sub => {
+            const startDate = new Date(sub.startDate);
+            const endDate = new Date(sub.endDate);
+            return startDate <= currentDate && endDate >= currentDate;
+        });
+
+        if(activeSubs.length === 0){
+            return res.status(401).json({
+                msg: 'Unauthorized, subscription expired'
+            });
+        }
+        //const activeSub = activeSubs[0];
+       // const updatedTotalVisits = parseInt(activeSub.totalVistis, 10) + 1; 
+        //await UserSubscription.findByIdAndUpdate(activeSub._id, {
+        //    $set: { totalVistis: updatedTotalVisits } // Correct the field name if necessary
+        //});
+        res.status(200).json({
+            msg: 'Entry authorized',
+            userSubs: activeSubs 
+        });
+    }catch(error){
+        console.error(error);
+        res.status(500).json({
+            error: error.message
+        })
+    }
 });
 
 

@@ -9,7 +9,7 @@ const userSubStatModel = mongoose.Schema({
     subID: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: 'Gym'
+        ref: 'Sub'
     }, 
     totalVistis: {
         type: String,

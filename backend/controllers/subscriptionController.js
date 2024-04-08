@@ -106,11 +106,13 @@ const getUserSubs = asyncHandler(async(req, res) => {
         }
         const subs = [];
         for(let sub of userSubs){
-            console.log(sub.subID);
             const gymSub = await Subscription.findOne(sub.subID);
             const gym = await Gym.findOne({_id: gymSub.gymID}, 'name');
             subs.push({
                 subID: sub.id,
+                subName: gymSub.subName,
+                subType: gymSub.subType,
+                subPrice: gymSub.subPrice,
                 gymName: gym.name,
                 startDate: sub.startDate,
                 endDate: sub.endDate,
@@ -273,13 +275,12 @@ const deleteSub = asyncHandler(async(req, res) =>{
 // @route   POST /api/subscription/subUser/
 // @access  PRIVATE
 const subUser = asyncHandler(async(req, res) =>{
-    console.log(req.body);
-    const { userID, genericID } = req.body;
+    const { userID, genericID, genericID2 } = req.body;
     if(!userID || !genericID){
         return res.status(400).json({ msg: 'Bad request, missing required fields' });
     }
-    const subID =  genericID
-
+    const subID =  genericID;
+    const gymID = genericID2;
 
     //check if user is already subscribed
     const userIDObj = new mongoose.Types.ObjectId(userID);
@@ -287,6 +288,10 @@ const subUser = asyncHandler(async(req, res) =>{
     const isAlreadySubscribed = checkSubs.some(subscription => subscription.subID.toString() === subID);
     if(isAlreadySubscribed){
         return res.status(409).json({ msg: 'User is already subscribed to this subscription' });
+    }
+    const AlreadyHasSubInTheSameGym = checkSubs.some(subscription => subscription.gymID.toString() === gymID);
+    if(AlreadyHasSubInTheSameGym){
+        return res.status(409).json({ msg: 'User is already subscribed to this gym' });
     }
 
 
@@ -322,6 +327,7 @@ const subUser = asyncHandler(async(req, res) =>{
     const userSub = await UserSubscription.create({
         userID,
         subID,
+        gymID,
         startDate,
         endDate
     });
@@ -338,5 +344,65 @@ const subUser = asyncHandler(async(req, res) =>{
     });
 });
 
-
-module.exports = {createSub, getSubs, getSub, getUserSubs, updateSub, deleteSub, subUser}
+// @desc    Cancel a user's subscription
+// @route   DELETE /api/subscription/cancel/token/userID/userSubID
+// @access  PRIVATE
+const cancel = asyncHandler(async(req, res) =>{
+    const {token, userID, userSubID} = req.params;
+    try{
+        if(!token){
+            return res.status(400).json({
+                msg: 'No token'
+            });
+        }
+        jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+            if(err){
+                res.status(400);
+                throw new Error('Invalid token');
+            }
+        });
+        if(!userID){
+            return res.status(400).json({
+                msg: 'No UserID'
+            });
+        }
+        const user = await User.findById(userID);
+        if(!user){
+            return res.status(400).json({
+                msg: 'User does not exist'
+            });
+        }
+        if(!userSubID){
+            return res.status(400).json({
+                msg: 'No SubID'
+            });
+        }
+        const userSub = await UserSubscription.findById(userSubID);
+        if(!userSub){
+            return res.status(400).json({
+                msg: 'Subscription does not exist'
+            });
+        }
+        if(userSub.userID.toString() != user._id.toString()){
+            return res.status(401).json({
+                msg: 'Unauthorized'
+            });
+        }
+        const deletedSub = await UserSubscription.findByIdAndDelete(userSub.id);
+        if(!deletedSub){
+            return res.status(500).json({
+                msg: 'Server error'
+            });
+        }
+        return res.status(200).json({
+            msg: `User subscription ${deleteSub.id} deleted`
+        });
+    }catch(error){
+        console.error(error);
+        res.status(500).json({
+            error: error.message
+        });
+    }
+    
+});
+module.exports = {createSub, getSubs, getSub, getUserSubs, updateSub, deleteSub, subUser, cancel}
