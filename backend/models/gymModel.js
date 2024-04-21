@@ -101,6 +101,11 @@ const gymSchema = mongoose.Schema({
         type:String,
         required: true,
     },
+    currentVisitors:{
+        type: Number,
+        required:false,
+        default: 0
+    },
     location: {
         type: {
             type: String,

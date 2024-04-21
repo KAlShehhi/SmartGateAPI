@@ -10,7 +10,8 @@ const {
         applyToBeAGymOwner,
         getApplyStatus,
         gymCreated,
-        getUserGymID
+        getUserGymID,
+        updateUser
 } = require('../controllers/userAppController')
 const { auth } = require('../middleware/authMiddleware');
 
@@ -24,5 +25,6 @@ router.post('/checkAdmin', isAdminCheck);
 router.post('/applyGymOwner', applyToBeAGymOwner);
 router.post('/getApplyStatus', getApplyStatus);
 router.get('/gymCreated/:id', gymCreated);
+router.post('/updateUser/', updateUser);
 
 module.exports = router;

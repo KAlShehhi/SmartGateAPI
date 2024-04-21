@@ -5,7 +5,11 @@ const UserEntry = require('../models/gymEntryByUserModel');
 const UserExit = require('../models/gymExitByUserModel');
 const Subscription = require('../models/subscriptionModel');
 const UserSubscription = require('../models/userSubscriptionModel');
-const { default: mongoose, mongo } = require('mongoose');
+const mongoose = require('mongoose');
+
+var cron = require('node-cron');
+
+
 
 // @desc    check if the server is online or not
 // @route   GET /api/gate/check
@@ -23,23 +27,30 @@ const checkServer = asyncHandler(async (req, res) => {
 // @access  PUBLIC
 const userEntry = asyncHandler(async(req, res) => {
     const {userID, gymID} = req.params;
+    console.log(req.params);
+    const isValidMongoID = (id) => mongoose.Types.ObjectId.isValid(id);
+    if(!isValidMongoID(userID) || !isValidMongoID(gymID)){
+        return res.status(401).json({
+            msg: 'ID not valid'
+        });
+    }
     const user = await User.findById(userID);
     const currentDate = new Date(); 
     if(!user){
-        res.status(400).json({
+        return res.status(401).json({
             msg: 'User does not exist'
         });
     }
     const gym = await Gym.findById(gymID);
     if(!gym){
-        res.status(400).json({
+        return res.status(401).json({
             msg: 'Gym does not exist'
         });
     }
     try{
         const userSubs = await UserSubscription.find({userID: new mongoose.Types.ObjectId(userID), gymID: new mongoose.Types.ObjectId(gymID)});
         if(userSubs.length === 0){
-            res.status(401).json({
+            return res.status(401).json({
                 msg: 'Unauthorized'
             });
         }
@@ -55,18 +66,29 @@ const userEntry = asyncHandler(async(req, res) => {
                 msg: 'Unauthorized, subscription expired'
             });
         }
-        //const activeSub = activeSubs[0];
-       // const updatedTotalVisits = parseInt(activeSub.totalVistis, 10) + 1; 
-        //await UserSubscription.findByIdAndUpdate(activeSub._id, {
-        //    $set: { totalVistis: updatedTotalVisits } // Correct the field name if necessary
-        //});
-        res.status(200).json({
-            msg: 'Entry authorized',
-            userSubs: activeSubs 
+        const activeSub = activeSubs[0];
+        const updatedTotalVisits = parseInt(activeSub.totalVistis, 10) + 1; 
+        const currentSub = await UserSubscription.findByIdAndUpdate(activeSub._id, {
+            $set: { totalVistis: updatedTotalVisits } 
         });
+        const currentGym = await Gym.findById(gymID)
+        await Gym.findOneAndUpdate({_id: gymID}, {currentVisitors: Number(currentGym.currentVisitors + 1)})
+        const entry = await UserEntry.create({
+            userID,
+            subID: currentSub.id,
+            enteredAt: currentDate
+            
+        })
+
+        return res.status(200).json({
+            msg: 'Entry authorized',
+            userSubs: activeSubs,
+            entry: entry
+        });
+
     }catch(error){
         console.error(error);
-        res.status(500).json({
+        res.status(401).json({
             error: error.message
         })
     }
@@ -77,21 +99,48 @@ const userEntry = asyncHandler(async(req, res) => {
 // @route   GET /api/gate/exit/:gymID/:userID
 // @access  PUBLIC
 const userExit = asyncHandler(async(req, res) => {
-    const gymID = req.body.gymID
-    const userID = req.body.userID;
-    const user = await User.findById({userID});
-    const gym = await Gym.findById({gymID});
+    const {userID, gymID} = req.params;
+    const isValidMongoID = (id) => mongoose.Types.ObjectId.isValid(id);
+    if(!isValidMongoID(userID) || !isValidMongoID(gymID)){
+        return res.status(401).json({
+            msg: 'ID not valid'
+        });
+    }
+    const user = await User.findById(userID);
+    const currentDate = new Date(); 
     if(!user){
-        res.status(400).json({
+        return res.status(401).json({
             msg: 'User does not exist'
         });
     }
+
+    const gym = await Gym.findById(gymID);
     if(!gym){
-        res.status(400).json({
+        return res.status(401).json({
             msg: 'Gym does not exist'
         });
     }
-    //TODO: auth user out of gym
+
+    const entry = await UserEntry.findOneAndUpdate({hasExisted: false}, {hasExisted: true}).sort({enteredAt: -1});
+    if(!entry){
+        return res.status(401).json({
+            msg: 'No entry'
+        }); 
+    }
+    const currentGym = await Gym.findById(gymID)
+    await Gym.findOneAndUpdate({_id: gymID}, {currentVisitors: Number(currentGym.currentVisitors - 1)})
+
+    const exit = await UserExit.create({
+        userID,
+        subID: entry.subID,
+        entryID: entry.id,
+        exitedAt: currentDate
+    });
+
+    return res.status(200).json({
+        entry,
+        exit
+    });
 });
 
 

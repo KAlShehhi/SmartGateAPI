@@ -10,7 +10,16 @@ const gymEntryByUserSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'Subscription'
+    },
+    enteredAt:{
+        type: Date,
+        required: true,
+    },
+    hasExisted: {
+        type: Boolean,
+        required: true,
+        default: false
     }
-}, {timestamps: true});
+});
 
 module.exports = mongoose.model('UserEntry', gymEntryByUserSchema);

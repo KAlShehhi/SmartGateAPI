@@ -19,6 +19,7 @@ app.use('/api/subscription', require('./routes/subscriptionRoutes'));
 app.use('/api/app/users', require('./routes/userAppRoutes'));
 app.use('/api/admin/', require('./routes/adminRoutes'));
 app.use('/api/review', require('./routes/reviewRoutes'));
+app.use('/api/statistics', require('./routes/statisticsRoutes'));
 
 app.use(errorHandler);
 

@@ -6,7 +6,8 @@ const { getUserGyms,
         updateGym,
         deleteGym ,
         getGym,
-        getGyms
+        getGyms,
+        getGymsBasedOnEmirate
 } = require('../controllers/gymController');
 
 const {auth} = require('../middleware/authMiddleware');
@@ -16,5 +17,6 @@ router.route('/hasGym').post(auth, hasGym);
 router.route('/updateGym/:id').put(auth, updateGym);
 router.route('/getGym/:id').get(getGym);
 router.route('/getGyms/:lat/:lng').get(getGyms);
+router.route('/getGymsBasedOnEmirate/:emirate').get(getGymsBasedOnEmirate);
 
 module.exports = router;

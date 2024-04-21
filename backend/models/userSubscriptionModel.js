@@ -36,4 +36,5 @@ const userSubModel = mongoose.Schema({
 });
 
 
+
 module.exports = mongoose.model('UserSubscription', userSubModel);;

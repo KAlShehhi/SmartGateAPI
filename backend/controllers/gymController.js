@@ -26,6 +26,7 @@ const createGym = asyncHandler(async (req, res) => {
         lat,
         lng,
         swimmingPool,
+        icebath,
         crossfit,
         cafe,
         restaurant,
@@ -52,8 +53,6 @@ const createGym = asyncHandler(async (req, res) => {
         const user = await User.findById(ownerID);
         if (user) {
             if (user.isGymOwner) {
-                console.log(lng);
-                // Create the gym with location details
                 const gym = await Gym.create({
                     ownerID,
                     name,
@@ -65,11 +64,13 @@ const createGym = asyncHandler(async (req, res) => {
                     googleMapsLink,
                     lat,
                     lng,
+                    rating: 0,
                     location: {
                         type: "Point",
                         coordinates: [lng, lat]
                     },
                     swimmingPool,
+                    icebath,
                     crossfit,
                     cafe,
                     restaurant,
@@ -130,37 +131,66 @@ const updateGym = asyncHandler (async (req, res) => {
         res.status(400);
         throw new Error('Invalid gym id');
     }
-    const {name, phoneNumber, allowedGenders, workingHours, fullCapacity, emirate, googleMapsLink, lat , lng, swimmingPool, crossfit, cafe, restaurant, sauna, lockers, changingRooms, coaches, freeCoaches, description, ownerID } = req.body;   
+    const {name, phoneNumber, allowedGenders, workingHours, fullCapacity, emirate, googleMapsLink, lat , lng, swimmingPool, crossfit, cafe, icebath, restaurant, sauna, lockers, changingRooms, coaches, freeCoaches, description, ownerID } = req.body;   
     if (!name || !phoneNumber || !allowedGenders || !workingHours || !fullCapacity || 
         !emirate || !googleMapsLink || lat === undefined || lng === undefined || 
         swimmingPool === undefined || crossfit === undefined || cafe === undefined || 
-        restaurant === undefined || sauna === undefined || lockers === undefined || 
+        restaurant === undefined || sauna === undefined || icebath === undefined || lockers === undefined || 
         changingRooms === undefined || coaches === undefined || freeCoaches === undefined || 
         !description, !ownerID) {
         return res.status(400).json({ message: 'Please enter all fields' });
     
     }
-    const gym = await Gym.findById(req.params.id);
-    if(!gym){
-        res.status(400);
-        throw new Error('Gym not found!');
+    try{
+        const gym = await Gym.findById(req.params.id);
+        if(!gym){
+            res.status(400);
+            throw new Error('Gym not found!');
+        }
+        const user = await User.findById(ownerID);
+        //check auth
+        if(!user){
+            res.status(401)
+            throw new Error('User not found');
+        }
+        //check if user is the one who created the gym
+        if(gym.ownerID.toString() !== user.id){
+            res.status(401)
+            throw new Error('User not authorized');
+        }
+        const updatedGym = await Gym.findByIdAndUpdate(req.params.id, 
+            {
+                name,
+                phoneNumber,
+                allowedGenders,
+                workingHours,
+                fullCapacity,
+                emirate,
+                googleMapsLink,
+                swimmingPool,
+                crossfit,
+                cafe,
+                restaurant,
+                sauna,
+                icebath,
+                lockers,
+                changingRooms,
+                coaches,
+                freeCoaches,
+                description,
+        }, {
+            new: true,
+        });
+        if(updateGym){
+            console.log(updateGym);
+            console.log(`Updated Gym: ${updatedGym.id}`.green);
+            return res.status(200).json({updatedGym});
+        }
+        res.status(500).send({ message: 'Server error occurred.' });
+    }catch(error){
+        console.error(error)
+        res.status(500).send({ message: 'Server error occurred.' });
     }
-    const user = await User.findById(ownerID);
-    //check auth
-    if(!user){
-        res.status(401)
-        throw new Error('User not found');
-    }
-    //check if user is the one who created the gym
-    if(gym.ownerID.toString() !== user.id){
-        res.status(401)
-        throw new Error('User not authorized');
-    }
-    const updatedGym = await Gym.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-    });
-    console.log(`Updated Gym: ${updatedGym.id}`.green);
-    res.status(200).json({updatedGym});
 });
 
 // @desc    Delete gym
@@ -225,7 +255,7 @@ const getGyms = asyncHandler(async (req, res) => {
                     near: { type: "Point", coordinates: userLocation },
                     distanceField: "distance", 
                     spherical: true,
-                    maxDistance: 15000 // Maximum distance in meters
+                    maxDistance: 20000 
                 }
             },
             {
@@ -239,13 +269,59 @@ const getGyms = asyncHandler(async (req, res) => {
                 }
             }
         ]);
-        res.json(gymsNearby);
+        res.status(200).json(gymsNearby);
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: 'Server error occurred.' });
     }
 });
 
+
+// @desc    Get gyms in a specific emirate
+// @route   GET /api/gym/getGyms/:emirate
+// @access  Public
+const getGymsBasedOnEmirate = asyncHandler(async (req, res) => {
+    const {emirate} = req.params;
+    let gymsNearby;
+    let sortEmirate;
+    switch (emirate.replace(" ", "")) {
+        case 'AbuDhabi':
+            sortEmirate = 'Abu Dhabi';
+            break;
+        case 'Dubai':
+            sortEmirate = 'Dubai';
+            break;
+        case 'Sharjah':
+            sortEmirate = 'Sharjah';
+            break;
+        case 'Ajman':
+            sortEmirate = 'Ajman';
+            break;
+        case 'UmmALQuwain':
+            sortEmirate = 'Umm AL Quwain';
+            break;
+        case 'RasAlKhaimah':
+            sortEmirate = 'Ras Al Khaimah';
+            break;
+        case 'Fujairah':
+            sortEmirate = 'Fujairah';
+            break;
+        default:
+            return res.status(400).send({message: 'Invalid Emirate'});
+    } 
+    gymsNearby = await Gym.aggregate([
+        { $match: { emirate: sortEmirate } },
+        { $project: {
+            gymID: "$_id",
+            name: 1,
+            rating: 1,
+            emirate: 1,
+            workingHours: 1,
+            _id: 0 
+        }}
+    ]);
+    res.status(200).json(gymsNearby);
+});
 
 module.exports = {
     getUserGyms, 
@@ -254,5 +330,6 @@ module.exports = {
     deleteGym,
     hasGym,
     getGym,
-    getGyms
+    getGyms,
+    getGymsBasedOnEmirate
 }

@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const UserRequestGymOwner = require('../models/userRequestGymOwnerModel');
+const mongoose = require('mongoose');
 
 // @desc    Gets the existing token from the user and validated it
 // @route   POST /api/app/users/validate
@@ -81,11 +82,45 @@ const loginUser = asyncHandler(async(req, res) => {
     })
 });
 
+// @desc    Authenticate a user
+// @route   POST /api/app/users/updateUser
+// @access  Public
+const updateUser = asyncHandler(async(req, res) => {
+    const {firstName, lastName, email, phoneNumber, isMale, day, month, year, emirate, userID} = req.body;
+    if(!firstName || !lastName || !email || !phoneNumber || !day || !month || !year|| !emirate || !isMale){
+        res.status(400);
+        throw new Error('Please add all fields');
+    }
+    const userExist = await User.findById(userID);
+    if(!userExist){
+        res.status(409)
+        throw new Error('User not found')
+    }
+    const updatedUser = await User.findOneAndUpdate({_id: new mongoose.Types.ObjectId(userID)}, {
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        isMale,
+        DateOfBirth: new Date(year, month - 1, day),
+        password,
+        emirate,
+    }, {new: true});
+    if(!updatedUser){
+        res.status(500)
+        throw new Error('Internal server error')
+    }
+    return res.status(200).json({
+        updatedUser
+    })
+});
+
+
+
 // @desc    Register a user 
 // @route   POST /api/app/users/registerUser
 // @access  Public
 const registerUser =  asyncHandler(async(req, res) => {
-    console.log(req.body);
     const {firstName, lastName, email, phoneNumber, isMale, day, month, year, password, emirate} = req.body;
     if(!firstName || !lastName || !email || !phoneNumber || !day || !month || !year|| !emirate){
         res.status(400);
@@ -374,5 +409,6 @@ module.exports = {
     applyToBeAGymOwner,
     getApplyStatus,
     gymCreated,
-    getUserGymID
+    getUserGymID,
+    updateUser
 }

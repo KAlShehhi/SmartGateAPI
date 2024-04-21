@@ -4,6 +4,7 @@ const Gym = require('../models/gymModel');
 const User = require('../models/userModel');
 const Subscription = require('../models/subscriptionModel');
 const UserSubscription = require('../models/userSubscriptionModel');
+const cron = require('node-cron');
 const jwt = require('jsonwebtoken');
 
 // @desc    let gym owner create a subscripton model
@@ -405,4 +406,92 @@ const cancel = asyncHandler(async(req, res) =>{
     }
     
 });
-module.exports = {createSub, getSubs, getSub, getUserSubs, updateSub, deleteSub, subUser, cancel}
+
+
+// @desc    Cancel a user's subscription
+// @route   GET /api/subscription/getUserSub/:userSubID
+// @access  PUBLIC
+const getUserSub = asyncHandler(async(req, res) =>{
+    const {userSubID} = req.params;
+    try{
+        if(!userSubID){
+            res.status(500).json({
+                msg: "No subID"
+            });  
+        }
+        const userSub = await UserSubscription.findById(userSubID);
+        if(!userSub){
+            res.status(500).json({
+                msg: "user subscription does not exist"
+            });   
+        }
+        res.status(200).json({
+            id: userSub.id,
+            userID: userSub.userID,
+            gymID: userSub.gymID,
+            subID: userSub.subID,
+            startDate: userSub.startDate,
+            endDate: userSub.endDate,
+            totalVistis: userSub.totalVistis,
+        });  
+    }catch{
+        console.error(error);
+        res.status(500).json({
+            error: error.message
+        });  
+    }
+});
+
+
+
+// @desc    Cancel a user's subscription
+// @route   GET /api/subscription/getGymUserSubs/:gymID
+// @access  PUBLIC
+const getGymUserSubs = asyncHandler(async (req, res) => {
+    const gymID = req.params.gymID;
+    try {
+        if (!gymID) {
+            return res.status(500).json({
+                msg: "No gymID provided"
+            });  
+        }
+        // Find subscriptions for the gym and populate the user details
+        const gymSubs = await UserSubscription.find({ gymID: gymID }).populate('userID', 'firstName lastName email phoneNumber');
+        if (!gymSubs || gymSubs.length === 0) {
+            return res.status(400).json({
+                msg: "No one is subscribed to this gym"
+            });   
+        }
+        // Map the gymSubs to extract the required user details
+        const userSubDetails = gymSubs.map(sub => {
+            return {
+                firstName: sub.userID.firstName,
+                lastName: sub.userID.lastName,
+                phoneNumber: "0" + sub.userID.phoneNumber,
+                email: sub.userID.email,
+                startDate: sub.startDate,
+                endDate: sub.endDate
+            };
+        });
+        res.status(200).json(userSubDetails);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: error.message
+        });  
+    }
+});
+
+
+cron.schedule('0 0 * * *', async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+    const result = await UserSub.deleteMany({
+        endDate: { $lt: today }
+    });
+
+    console.log(`Deleted ${result.deletedCount} expired subscriptions.`);
+});
+
+
+module.exports = {createSub, getSubs, getSub, getUserSubs, updateSub, deleteSub, subUser, cancel, getUserSub, getGymUserSubs}
