@@ -32,7 +32,6 @@ const validateExistingToken = asyncHandler(async(req, res) => {
 // @access  Public
 const checkPassword = asyncHandler(async(req, res) => {
     const {email} = req.body;
-    console.log(email);
     //Check for user email
     const userExist = await User.findOne({email})
     if(userExist){
@@ -51,7 +50,6 @@ const checkPassword = asyncHandler(async(req, res) => {
 // @access  Public
 const loginUser = asyncHandler(async(req, res) => {
     const {email, token, isAuthed} = req.body;
-    console.log(req.body);
     //Check for user email
     const userExist = await User.findOne({email})
     console.log(token);

@@ -15,7 +15,6 @@ var cron = require('node-cron');
 // @route   GET /api/gate/check
 // @access  Public
 const checkServer = asyncHandler(async (req, res) => {
-    console.log("123");
     res.status(201).json({
         isOnline: true
     })
@@ -67,6 +66,17 @@ const userEntry = asyncHandler(async(req, res) => {
             });
         }
         const activeSub = activeSubs[0];
+        if(activeSub.hadExpired){
+            return res.status(401).json({
+                msg: 'Unauthorized'
+            });
+        }
+        if(activeSub.accessRevoked === true){
+            return res.status(401).json({
+                msg: 'Unauthorized'
+            });
+        }
+        
         const updatedTotalVisits = parseInt(activeSub.totalVistis, 10) + 1; 
         const currentSub = await UserSubscription.findByIdAndUpdate(activeSub._id, {
             $set: { totalVistis: updatedTotalVisits } 
@@ -128,7 +138,11 @@ const userExit = asyncHandler(async(req, res) => {
         }); 
     }
     const currentGym = await Gym.findById(gymID)
-    await Gym.findOneAndUpdate({_id: gymID}, {currentVisitors: Number(currentGym.currentVisitors - 1)})
+    if(Number(currentGym.currentVisitors - 1) <= 0){
+        await Gym.findOneAndUpdate({_id: gymID}, {currentVisitors: 0})
+    }else{
+        await Gym.findOneAndUpdate({_id: gymID}, {currentVisitors: Number(currentGym.currentVisitors - 1)})
+    }
 
     const exit = await UserExit.create({
         userID,

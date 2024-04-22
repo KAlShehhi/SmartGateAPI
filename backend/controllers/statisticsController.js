@@ -12,6 +12,11 @@ const mongoose = require('mongoose');
 // @access  PRIVATE
 const getAverageTime = asyncHandler(async (req, res) => {
     const subID = req.body.genericID;
+    if(!subID){
+        return res.status(400).json({
+            msg: 'Bad request'
+        });
+    }
     try {
         const subscriptionObjectId = new mongoose.Types.ObjectId(subID);
         const results = await UserEntry.aggregate([
@@ -49,7 +54,8 @@ const getAverageTime = asyncHandler(async (req, res) => {
             let hours = Math.floor(minutes / 60);
             seconds = seconds % 60;
             minutes = minutes % 60;
-            return `${hours}:${minutes}:${seconds}`;
+            const pad = num => num.toString().padStart(2, '0');
+            return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
         };
         const formattedResults = results.map(result => ({
             userID: result._id.toString(), 
@@ -69,6 +75,11 @@ const getAverageTime = asyncHandler(async (req, res) => {
 // @access  PRIVATE
 const getTimeSpentEveryDay = asyncHandler(async (req, res) => {
     const { userID, genericID } = req.body;
+    if(!userID || !genericID){
+        return res.status(400).json({
+            msg: 'Bad request'
+        });
+    }
     const subID = genericID;
     try {
         const userIdObjectId = new mongoose.Types.ObjectId(userID);
@@ -126,6 +137,11 @@ const getTimeSpentEveryDay = asyncHandler(async (req, res) => {
 // @access  PRIVATE
 const getDaysVisted = asyncHandler(async (req, res) => {
     const { userID, genericID } = req.body;
+    if(!userID || !genericID){
+        return res.status(400).json({
+            msg: 'Bad request'
+        });
+    }
     const subID = genericID;
 
     try {
@@ -173,7 +189,11 @@ const getDaysVisted = asyncHandler(async (req, res) => {
 // @access  PRIVATE
 const getDaysNotVisted = asyncHandler(async (req, res) => {
     const { userID, genericID } = req.body;
-
+    if(!userID || !genericID){
+        return res.status(400).json({
+            msg: 'Bad request'
+        });
+    }
     try {
         const subscription = await UserSubscription.findOne({ _id: genericID, userID: userID });
         if (!subscription) {
@@ -226,6 +246,11 @@ const getDaysNotVisted = asyncHandler(async (req, res) => {
 // @access  PRIVATE
 const getDaysLeft = asyncHandler(async (req, res) => {
     const { userID, genericID } = req.body;
+    if(!userID || !genericID){
+        return res.status(400).json({
+            msg: 'Bad request'
+        });
+    }
     const subID = genericID;
 
     try {
@@ -246,5 +271,45 @@ const getDaysLeft = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Get the number of days that the user has on his subscription
+// @route   POST /api/statistics/resetCurrentVisitors/
+// @access  PRIVATE
+const resetCurrentVisitors = asyncHandler(async (req, res) => {
+    const userID = req.body.userID;
+    if(!userID){
+        return res.status(400).json({
+            msg: 'Bad request'
+        });
+    }
+    try{
+        const user = await User.findById(userID);
+        if(!user){
+            return res.status(400).json({
+                msg: 'User not found'
+            });
+        }
+        const gym = await Gym.findOne({ownerID: new mongoose.Types.ObjectId(userID)});
+        if(!gym){
+            return res.status(400).json({
+                msg: 'Gym not found'
+            });
+        }
+        if(user.gymID != gym.id){
+            return res.status(401).json({
+                msg: 'Unauthorized'
+            });
+        }
+        const updatedGym = await Gym.findOneAndUpdate({ownerID: userID},
+            {
+                currentVisitors: 0
+            }, {new: true});
+        return res.status(200).json({
+            currentVisitors: updatedGym.currentVisitors
+        });
+    }catch(error){
+        
+    }
+})
 
-module.exports = {getAverageTime, getTimeSpentEveryDay, getDaysVisted, getDaysNotVisted, getDaysLeft};
+
+module.exports = {getAverageTime, getTimeSpentEveryDay, getDaysVisted, getDaysNotVisted, getDaysLeft, resetCurrentVisitors};

@@ -32,6 +32,16 @@ const userSubModel = mongoose.Schema({
     meanSpentTime: {
         type: String,
         require:false
+    },
+    hadExpired: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    accessRevoked: {
+        type: Boolean,
+        default: false,
+        required: true
     }
 });
 

@@ -117,6 +117,8 @@ const getUserSubs = asyncHandler(async(req, res) => {
                 gymName: gym.name,
                 startDate: sub.startDate,
                 endDate: sub.endDate,
+                hadExpired: sub.hadExpired,
+                accessRevoked: sub.accessRevoked,
             });
         }
         res.status(200).json(subs);
@@ -152,6 +154,8 @@ const getSub = asyncHandler(async(req, res) =>{
             subName: sub.subName,
             subType: sub.subType,
             subPrice: sub.subPrice,
+            accessRevoked: sub.accessRevoked,
+            hadExpired: sub.hadExpired
         };
         res.status(200).json(subResponse);
     } catch (error) {
@@ -295,7 +299,6 @@ const subUser = asyncHandler(async(req, res) =>{
         return res.status(409).json({ msg: 'User is already subscribed to this gym' });
     }
 
-
     const sub = await Subscription.findById(subID);
     if (!sub) {
         return res.status(404).json({
@@ -330,7 +333,9 @@ const subUser = asyncHandler(async(req, res) =>{
         subID,
         gymID,
         startDate,
-        endDate
+        endDate,
+        hadExpired: false,
+        accessRevoked: false,
     });
 
     if(!userSub){
@@ -433,6 +438,8 @@ const getUserSub = asyncHandler(async(req, res) =>{
             startDate: userSub.startDate,
             endDate: userSub.endDate,
             totalVistis: userSub.totalVistis,
+            accessRevoked: userSub.accessRevoked,
+            hadExpired: userSub.hadExpired
         });  
     }catch{
         console.error(error);
@@ -446,7 +453,7 @@ const getUserSub = asyncHandler(async(req, res) =>{
 
 // @desc    Cancel a user's subscription
 // @route   GET /api/subscription/getGymUserSubs/:gymID
-// @access  PUBLIC
+// @access  PRIVATE
 const getGymUserSubs = asyncHandler(async (req, res) => {
     const gymID = req.params.gymID;
     try {
@@ -465,12 +472,15 @@ const getGymUserSubs = asyncHandler(async (req, res) => {
         // Map the gymSubs to extract the required user details
         const userSubDetails = gymSubs.map(sub => {
             return {
+                userID: sub.userID._id,
                 firstName: sub.userID.firstName,
                 lastName: sub.userID.lastName,
                 phoneNumber: "0" + sub.userID.phoneNumber,
                 email: sub.userID.email,
                 startDate: sub.startDate,
-                endDate: sub.endDate
+                endDate: sub.endDate,
+                accessRevoked: sub.accessRevoked,
+                hadExpired: sub.hadExpired
             };
         });
         res.status(200).json(userSubDetails);
@@ -482,16 +492,109 @@ const getGymUserSubs = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Revoke a user access
+// @route   POST /api/subscription/revokeUserAccess/
+// @access  PRIVATE
+const revokeUserAccess = asyncHandler(async (req, res) => {
+    const {userID, memberID, gymID} = req.body;
+    try{
+        const owner = await User.findById(new mongoose.Types.ObjectId(userID))
+        if(!owner){
+            return res.status(400).json({
+                msg: "Gym owner not found"
+            });  
+        }
+        const member = await User.findById(new mongoose.Types.ObjectId(memberID))
+        if(!member){
+            return res.status(400).json({
+                msg: "Member not found"
+            });  
+        }
+        if(owner.gymID != gymID){
+            return res.status(401).json({
+                msg: "Unauthorized"
+            });  
+        }
+        const userSub = await UserSubscription.findOne({userID: memberID, gymID: gymID});
+        if(!userSub){
+            return res.status(400).json({
+                msg: "User Subscription not found"
+            });  
+        }
+        const updatedUserSub = await UserSubscription.findOneAndUpdate({userID: memberID, gymID: gymID},{
+            accessRevoked: true
+        }, {new: true})
+        if(updatedUserSub){
+            res.status(200).json(updatedUserSub);
+        }
+    }catch(error){
+        console.log(error);
+        res.status(500).json({
+            error: error.message
+        });  
+    }
+});
 
-cron.schedule('0 0 * * *', async () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); 
-    const result = await UserSub.deleteMany({
-        endDate: { $lt: today }
-    });
-
-    console.log(`Deleted ${result.deletedCount} expired subscriptions.`);
+// @desc    Re-grant a user access
+// @route   POST /api/subscription/grantUserAccess/
+// @access  PRIVATE
+const grantUserAccess = asyncHandler(async (req, res) => {
+    const {userID, memberID, gymID} = req.body;
+    try{
+        const owner = await User.findById(new mongoose.Types.ObjectId(userID))
+        if(!owner){
+            return res.status(400).json({
+                msg: "Gym owner not found"
+            });  
+        }
+        const member = await User.findById(new mongoose.Types.ObjectId(memberID))
+        if(!member){
+            return res.status(400).json({
+                msg: "Member not found"
+            });  
+        }
+        if(owner.gymID != gymID){
+            return res.status(401).json({
+                msg: "Unauthorized"
+            });  
+        }
+        const userSub = await UserSubscription.findOne({userID: memberID, gymID: gymID});
+        if(!userSub){
+            return res.status(400).json({
+                msg: "User Subscription not found"
+            });  
+        }
+        const updatedUserSub = await UserSubscription.findOneAndUpdate({userID: memberID, gymID: gymID},{
+            accessRevoked: false
+        }, {new: true})
+        if(updatedUserSub){
+            res.status(200).json(updatedUserSub);
+        }
+    }catch(error){
+        console.log(error);
+        res.status(500).json({
+            error: error.message
+        });  
+    }
 });
 
 
-module.exports = {createSub, getSubs, getSub, getUserSubs, updateSub, deleteSub, subUser, cancel, getUserSub, getGymUserSubs}
+
+cron.schedule('0 0 * * *', async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const expiredSubscriptions = await UserSub.find({
+        endDate: { $lt: today },
+        hasExpired: false
+    });
+    expiredSubscriptions.forEach(async (sub) => {
+        sub.hasExpired = true;
+        await sub.save();
+        console.log(`Updated subscription ${sub._id} as expired.`);
+    });
+});
+
+
+
+module.exports = {createSub, getSubs, getSub, getUserSubs, updateSub, deleteSub, subUser, cancel, getUserSub, getGymUserSubs, revokeUserAccess, grantUserAccess}
